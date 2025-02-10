@@ -52,6 +52,7 @@ function draw() {
 
       if (isPacmanOpen) {
 
+        // Resizable mouth
         let mouthX = 37;
         let mouthY = 37;
         const mouthSize = 3;
