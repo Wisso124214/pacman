@@ -8,11 +8,11 @@ class PacMan extends HTMLElement {
     this.mouthSize = 2;
     this.radius = 13;
     this.isOpen = true;
-    this.direction = 0;
-    this.strDirection = 'right';
-    this.speed = 10;
-    this.idAnimationMouth = this.getIdAnimationMouth();
+    this.idDirection = 0;
+    this.direction = 'down';
+    this.speed = 50 / 10;
     this.idMove = this.getIdMove();
+    this.getIdAnimationMouth = this.getIdAnimationMouth();
 
     this.setXPacMan(37);
     this.setYPacMan(37);
@@ -21,16 +21,33 @@ class PacMan extends HTMLElement {
   getIdAnimationMouth() {
     return setInterval(() => {
       this.isOpen = !this.isOpen;
-      //this.printPacMan(ctx, this.getXPacMan(), this.getYPacMan(), this.direction, this.strDirection, this.isOpen, colors, this.mouthSize, this.radius);
     }, 150);
-  }
+  };
 
   getIdMove() {
     return setInterval(() => {
-      if (this.parentNode && this.parentNode.getElementById("canvas").width > this.getAttribute("xPacMan")) {
-        this.setXPacMan(this.getXPacMan() + this.speed);
+      if (this.parentNode && 
+          this.parentNode.getElementById("canvas").width > this.getAttribute("xPacMan") &&
+          0 < this.getAttribute("xPacMan") &&
+          this.parentNode.getElementById("canvas").height > this.getAttribute("yPacMan") &&
+          0 < this.getAttribute("yPacMan")
+        ) {
+        switch (this.direction) {
+          case 'right': 
+            this.setXPacMan(this.getXPacMan() + this.speed);
+            break;
+          case 'down': 
+            this.setYPacMan(this.getYPacMan() + this.speed);
+            break;
+          case 'left': 
+            this.setXPacMan(this.getXPacMan() - this.speed);
+            break;
+          case 'up': 
+            this.setYPacMan(this.getYPacMan() - this.speed);
+            break;
+        }
       }
-    }, 150);
+    }, fps);
   }
 
   erasePacMan = (ctx, x, y, colors, radius) => {
@@ -40,44 +57,64 @@ class PacMan extends HTMLElement {
     ctx.fill();
   }
 
-  printPacMan = (ctx, x, y, pacManDirection, strPacManDirection, isPacmanOpen, colors, mouthSizePacMan, radiusPacMan ) => {
-    const radius = radiusPacMan || 13;
-  
-    this.erasePacMan(ctx, x, y, radius, colors);
+  printPacMan = (ctx, x, y, idDirection, direction, isOpen, colors, mouthSize, radius ) => {
+    const thisRadius = radius || 13;
   
     // Pacman
     ctx.fillStyle = colors.pacManColor;
     ctx.beginPath();
   
-    if (isPacmanOpen) {
+    if (isOpen) {
       // Resizable mouth
       let mouthX = x;
       let mouthY = y;
-      const mouthSize = mouthSizePacMan || 2;
+      const thisMouthSize = mouthSize || 2;
   
-      switch (strPacManDirection) {
+      switch (direction) {
         case 'right':
-          mouthX -= mouthSize;
+          mouthX -= thisMouthSize;
+          this.idDirection = 0;
           break;
         case 'down':
-          mouthY -= mouthSize;
+          mouthY -= thisMouthSize;
+          this.idDirection = 1;
           break;
         case 'left':
-          mouthX += mouthSize;
+          mouthX += thisMouthSize;
+          this.idDirection = 2;
           break;
         case 'up':
-          mouthY += mouthSize;
+          mouthY += thisMouthSize;
+          this.idDirection = 3;
           break;
       }
   
       ctx.lineTo(mouthX, mouthY);
-      ctx.arc(x, y, radius, Math.PI / 7 + (Math.PI / 2) * pacManDirection, -Math.PI / 7 + (Math.PI / 2) * pacManDirection, false);
+      ctx.arc(x, y, radius, Math.PI / 7 + (Math.PI / 2) * idDirection, -Math.PI / 7 + (Math.PI / 2) * idDirection, false);
     } else {
       ctx.arc(x, y, radius, 0, 2*Math.PI, false);
     }
     ctx.fill();
   }
 
+  setDirection(direction) {
+    this.direction = direction;
+    
+    switch (direction) {
+      case 'right':
+        this.idDirection = 0;
+        break;
+      case 'down':
+        this.idDirection = 1;
+        break;
+      case 'left':
+        this.idDirection = 2;
+        break;
+      case 'up':
+        this.idDirection = 3;
+        break;
+    }
+  }
 
   static get observedAttributes() {
     return ['xpacman', 'ypacman'];

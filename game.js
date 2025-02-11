@@ -5,23 +5,23 @@ import { colors } from './consts.js';
 class PacMan_Game extends HTMLElement {
   constructor() {
     super();
+    
+    globalThis.fps = 1000 / 20;
 
     this.id = 'pacman-game';
     this.shadow = this.attachShadow({ mode: "open" });
 
-    this.fps = 1000 / 60;
-    this.borderWidth = 1.25;
+    this.borderWidth = 3;
     this.dotsWidth = 3.5;
     this.dotsSeparation = 20;
+
+    this.pacman = new PacMan();    
+    this.arrGhosts = [0]
 
     this.canvas = document.createElement("canvas");
     this.canvas.id = "canvas";
     this.canvas.width = 150;
     this.canvas.height = 150;
-    
-    const pacman = new PacMan();    
-    const ghost = new Ghost();
-    
     this.shadow.appendChild(this.canvas);
 
     if (this.canvas.getContext) {
@@ -30,8 +30,52 @@ class PacMan_Game extends HTMLElement {
       alert("ERROR. Canvas is not supported in your browser");
     }
 
-    this.shadow.appendChild(pacman);
-    this.shadow.appendChild(ghost);
+    this.shadow.appendChild(this.pacman);
+
+    for(let a of this.arrGhosts) {
+
+      this['ghost'+a] = new Ghost(a);
+      this.shadow.appendChild(this['ghost'+a]);
+    }
+    
+    globalThis.onkeydown = (e) => {
+      
+      if (e.key === 'd' || e.key === 'D' || e.key === 'ArrowRight') {
+          this.shadow.getElementById('pacman').setDirection('right');
+      } else 
+      if (e.key === 's' || e.key === 'S' || e.key === 'ArrowDown') {
+          this.shadow.getElementById('pacman').setDirection('down');
+      } else 
+      if (e.key === 'a' || e.key === 'A' || e.key === 'ArrowLeft') {
+          this.shadow.getElementById('pacman').setDirection('left');
+      } else 
+      if (e.key === 'w' || e.key === 'W' || e.key === 'ArrowUp') {
+          this.shadow.getElementById('pacman').setDirection('up');
+      }
+      
+      /*
+      if (e.key === 'd' || e.key === 'D' || e.key === 'ArrowRight') {
+        for(let a of this.arrGhosts) {
+          this.shadow.getElementById('ghost'+a).setDirection('right');
+        }
+      } else 
+      if (e.key === 's' || e.key === 'S' || e.key === 'ArrowDown') {
+        for(let a of this.arrGhosts) {
+          this.shadow.getElementById('ghost'+a).setDirection('down');
+        }
+      } else 
+      if (e.key === 'a' || e.key === 'A' || e.key === 'ArrowLeft') {
+        for(let a of this.arrGhosts) {
+          this.shadow.getElementById('ghost'+a).setDirection('left');
+        }
+      } else 
+      if (e.key === 'w' || e.key === 'W' || e.key === 'ArrowUp') {
+        for(let a of this.arrGhosts) {
+          this.shadow.getElementById('ghost'+a).setDirection('up');
+        }
+      }
+      */
+    }
   }
 
   connectedCallback() {
@@ -67,10 +111,11 @@ class PacMan_Game extends HTMLElement {
       ctx.fillRect(51 + i * this.dotsSeparation, 99, this.dotsWidth, this.dotsWidth);
     }*/
 
-    const pacman = this.shadow.getElementById("pacman");
-
-    pacman.printPacMan(ctx, pacman.getXPacMan(), pacman.getYPacMan(), pacman.direction, pacman.strDirection, pacman.isOpen, colors, pacman.mouthSize, pacman.radius);
-    this.shadow.getElementById("ghost").printGhost();
+    this.pacman.printPacMan(ctx, this.pacman.getXPacMan(), this.pacman.getYPacMan(), this.pacman.idDirection, this.pacman.direction, this.pacman.isOpen, colors, this.pacman.mouthSize, this.pacman.radius);
+    
+    for(let a of this.arrGhosts) {
+      this.shadow.getElementById("ghost"+a).printGhost();
+    }
 
     //sleep
     while (performance.now() - this.start < this.fps) { }
@@ -85,23 +130,14 @@ function roundedRect(ctx, x, y, width, height, radius, borderWidth) {
     borderWidth = 1;
   }
 
-  for (let i = 0; i < borderWidth; i+=.25) {
-    ctx.beginPath();
-    ctx.moveTo(x-i, y-i + radius);
-    ctx.arcTo(x-i, y-i + height, x-i + radius, y-i + height, radius);
-    ctx.arcTo(x-i + width, y-i + height, x-i + width, y-i + height - radius, radius);
-    ctx.arcTo(x-i + width, y-i, x-i + width - radius, y-i, radius);
-    ctx.arcTo(x-i, y-i, x-i, y-i + radius, radius);
-    ctx.stroke();
-
-    ctx.beginPath();
-    ctx.moveTo(x-i, y+i + radius);
-    ctx.arcTo(x-i, y+i + height, x-i + radius, y+i + height, radius);
-    ctx.arcTo(x-i + width, y+i + height, x-i + width, y+i + height - radius, radius);
-    ctx.arcTo(x-i + width, y+i, x-i + width - radius, y+i, radius);
-    ctx.arcTo(x-i, y+i, x-i, y+i + radius, radius);
-    ctx.stroke();
-  }
+  ctx.lineWidth = borderWidth;
+  ctx.beginPath();
+  ctx.moveTo(x, y + radius);
+  ctx.arcTo(x, y + height, x + radius, y + height, radius);
+  ctx.arcTo(x + width, y + height, x + width, y + height - radius, radius);
+  ctx.arcTo(x + width, y, x + width - radius, y, radius);
+  ctx.arcTo(x, y, x, y + radius, radius);
+  ctx.stroke();
 }
 
 customElements.define('lb-pacman-game', PacMan_Game);

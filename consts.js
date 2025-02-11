@@ -5,6 +5,9 @@ export const colors = {
   
   pacManColor: "yellow",
   
-  ghostColor: "red",
-  ghostEyeColor: ['white', 'blue'],
+  ghost: {
+    colors: ["red", "fuchsia", "orange", "aqua"],
+    pupil: 'blue',
+    sclera: 'white',
+  },
 };
