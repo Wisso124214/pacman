@@ -1,37 +1,50 @@
 function draw() {
   const canvas = document.getElementById("canvas");
   if (canvas.getContext) {
-    
-    const backgroundColor = "black";
-    const shapesColor = "blue";
-    const pacManColor = "yellow";
-    const dotsColor = "white";
-    const ghostColor = "red";
-    const ghostEyeColor = ['white', 'black'];
 
+    /**
+     * After
+     *  pacManDirection = (pacManDirection + 1) % 4;
+        strPacManDirection = ['right', 'down', 'left', 'up'][pacManDirection];
+     */
+    
+    const colors = {
+      backgroundColor: "black",
+      shapesColor: "blue",
+      pacManColor: "yellow",
+      dotsColor: "white",
+      ghostColor: "red",
+      ghostEyeColor: ['white', 'black'],
+    };
+
+    // Pacman
+    const mouthSize = 2;
+    const radiusPacMan = 13;
     let isPacmanOpen = true;
     let pacManDirection = 0;
     let strPacManDirection = 'right';
+    let xPacMan = 37;
+    let yPacMan = 37;
+    let speedPacMan = 10;
+
     
     setInterval(() => {
       isPacmanOpen = !isPacmanOpen;
-      printPacMan();
+      printPacMan(xPacMan, yPacMan, pacManDirection, strPacManDirection, isPacmanOpen, colors, mouthSize, radiusPacMan);
     }, 150);
     
     setInterval(() => {
-      pacManDirection = (pacManDirection + 1) % 4;
-      strPacManDirection = ['right', 'down', 'left', 'up'][pacManDirection];
-      printPacMan();
-    }, 1500);
+      xPacMan += speedPacMan;
+    }, 150);
 
 
     const ctx = canvas.getContext("2d");
 
-    ctx.fillStyle = backgroundColor;
+    ctx.fillStyle = colors.backgroundColor;
     ctx.fillRect(0, 0, canvas.width, canvas.height);
     
     // Map shapes 
-    ctx.strokeStyle = shapesColor;
+    ctx.strokeStyle = colors.shapesColor;
     roundedRect(ctx, 12, 12, 150, 150, 15);
     roundedRect(ctx, 19, 19, 150, 150, 9);
     roundedRect(ctx, 53, 53, 49, 33, 10);
@@ -39,23 +52,29 @@ function draw() {
     roundedRect(ctx, 135, 53, 49, 33, 10);
     roundedRect(ctx, 135, 119, 25, 49, 10);
     
-    const printPacMan = () => {
-
-      ctx.fillStyle = backgroundColor;
+    const erasePacMan = (x, y, colors, radius) => {
+      ctx.fillStyle = colors.backgroundColor;
       ctx.beginPath();
-      ctx.arc(37-1, 37-1, 13+2, 0, 2*Math.PI, false);
+      ctx.arc(x-1, y-1, radius+2, 0, 2*Math.PI, false);
       ctx.fill();
+    }
+
+    const printPacMan = (x, y, pacManDirection, strPacManDirection, isPacmanOpen, colors, mouthSizePacMan, radiusPacMan ) => {
+
+      const radius = radiusPacMan || 13;
+
+      erasePacMan(x, y, radius, colors);
 
       // Pacman
-      ctx.fillStyle = pacManColor;
+      ctx.fillStyle = colors.pacManColor;
       ctx.beginPath();
 
       if (isPacmanOpen) {
 
         // Resizable mouth
-        let mouthX = 37;
-        let mouthY = 37;
-        const mouthSize = 3;
+        let mouthX = x;
+        let mouthY = y;
+        const mouthSize = mouthSizePacMan || 2;
 
         switch (strPacManDirection) {
           case 'right':
@@ -73,16 +92,15 @@ function draw() {
         }
 
         ctx.lineTo(mouthX, mouthY);
-        ctx.arc(37, 37, 13, Math.PI / 7 + (Math.PI / 2) * pacManDirection, -Math.PI / 7 + (Math.PI / 2) * pacManDirection, false);
+        ctx.arc(x, y, radius, Math.PI / 7 + (Math.PI / 2) * pacManDirection, -Math.PI / 7 + (Math.PI / 2) * pacManDirection, false);
       } else {
-        ctx.arc(37, 37, 13, 0, 2*Math.PI, false);
+        ctx.arc(x, y, radius, 0, 2*Math.PI, false);
       }
       ctx.fill();
     }
-    printPacMan();
     
     // Dots
-    ctx.fillStyle = dotsColor;
+    ctx.fillStyle = colors.dotsColor;
     for (let i = 0; i < 8; i++) {
       ctx.fillRect(51 + i * 16, 35, 4, 4);
     }
@@ -96,7 +114,7 @@ function draw() {
     }
     
     // Ghost
-    ctx.fillStyle = ghostColor;
+    ctx.fillStyle = colors.ghostColor;
     ctx.beginPath();
     ctx.moveTo(83, 116);
     ctx.lineTo(83, 102);
@@ -112,7 +130,7 @@ function draw() {
     ctx.fill();
 
     // Ghost eyes
-    ctx.fillStyle = ghostEyeColor[0];
+    ctx.fillStyle = colors.ghostEyeColor[0];
     ctx.beginPath();
     ctx.moveTo(91, 96);
     ctx.bezierCurveTo(88, 96, 87, 99, 87, 101);
@@ -127,7 +145,7 @@ function draw() {
     ctx.fill();
 
     
-    ctx.fillStyle = ghostEyeColor[1];
+    ctx.fillStyle = colors.ghostEyeColor[1];
     ctx.beginPath();
     ctx.arc(101, 102, 2, 0, Math.PI * 2, true);
     ctx.fill();

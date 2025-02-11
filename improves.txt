@@ -1,9 +1,19 @@
  
-  - Definir la orientación del pacman (up, down, left, right) e imprimir a pacman según su orientación
-  - Establecer un punto de referencia para cada objeto (rectángulos, fantasmas, puntos, pacman...) 
-    para que al imprirlos solo se tenga que enviar su punto de referencia
-  - Trabajar el pacman y fantasmas como custom components
 
+  - Desacoplar la función de borrar pacman
+  - Establecer un punto de referencia para cada objeto para que al imprirlos solo se tenga que enviar su punto de referencia
+      . Rectángulos
+      . Fantasmas
+      . Puntos
+    ✔✔ Pacman
+    
+  - Trabajar como custom components:
+    . Juego
+    . Pacman
+    . Fantasmas 
+
+  
+✔✔ Definir la orientación del pacman (up, down, left, right) e imprimir a pacman según su orientación
 
   Preguntar al profe:
     - Si los powersUp son las pastillas grandes o incremento de velocidad, ralentización de los fantasmas y así...
