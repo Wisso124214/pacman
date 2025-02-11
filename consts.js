@@ -1,8 +1,10 @@
 export const colors = {
   backgroundColor: "black",
   shapesColor: "blue",
-  pacManColor: "yellow",
   dotsColor: "white",
+  
+  pacManColor: "yellow",
+  
   ghostColor: "red",
-  ghostEyeColor: ['white', 'black'],
+  ghostEyeColor: ['white', 'blue'],
 };

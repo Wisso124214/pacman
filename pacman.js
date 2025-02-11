@@ -27,8 +27,7 @@ class PacMan extends HTMLElement {
 
   getIdMove() {
     return setInterval(() => {
-
-      if (this.parentNode.getElementById("canvas").width > this.getAttribute("xPacMan")) {        
+      if (this.parentNode && this.parentNode.getElementById("canvas").width > this.getAttribute("xPacMan")) {
         this.setXPacMan(this.getXPacMan() + this.speed);
       }
     }, 150);
