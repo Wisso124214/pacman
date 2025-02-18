@@ -6,15 +6,17 @@ class Ghost extends HTMLElement {
     super();
 
     this.id = 'ghost'+id;
-    this.x = 75;
-    this.y = 75;
+    this.x = 80;
+    this.y = 90;
     this.speed = 10;
     this.direction = 'right';
     this.idDirection = 0;
-    this.state = 'scared';    //default, scared, blinking
+    this.state = 'default';    //default, scared, blinking
     this.startBlinking = performance.now();
     this.isBlinking = false;
     this.timeAnimationBlinking = 500;
+    this.isAnimationMoving = false;
+    this.startAnimationMoving = performance.now();
 
     //colors
     this.colors = {
@@ -57,14 +59,14 @@ class Ghost extends HTMLElement {
   printScaredFace(state) {
     this.printBodyGhost(state);
 
-    const xLeftEye = 93;
-    const yEyes = 98;
-    const xRightEye = 101;
+    const xLeftEye = this.x - 4;
+    const yEyes = this.y - 4;
+    const xRightEye = this.x + 4;
     
     const radiusEye = 2.5;
     
-    const xMouth = 87;
-    const yMouth = 106;
+    const xMouth = this.x - 10;
+    const yMouth = this.y + 4;
     
     const heightMouth = 3;
     const widthMouth = 3.4;
@@ -96,17 +98,41 @@ class Ghost extends HTMLElement {
   }
 
   printBodyGhost(state) {
-    ctx.fillStyle = this.colors[state].body;
+    
 
+    if (performance.now() - this.startAnimationMoving > 100) {
+      this.isAnimationMoving = !this.isAnimationMoving;
+      this.startAnimationMoving = performance.now();
+    }
+
+    ctx.fillStyle = this.colors[state].body;
     ctx.beginPath();
-    ctx.moveTo(83, 111);
-    ctx.lineTo(84, 102);
-    ctx.bezierCurveTo(84, 92, 89, 88, 97, 88);
-    ctx.bezierCurveTo(105, 88, 111, 92, 110, 107);
-    ctx.bezierCurveTo(111, 111, 112, 124, 103, 111);
-    ctx.lineTo(97, 116);
-    ctx.lineTo(91, 111);
-    ctx.bezierCurveTo(84, 119, 82, 116, 83, 111);
+    ctx.moveTo(this.x - 15, this.y + 9);
+    ctx.lineTo(this.x - 14, this.y);
+    ctx.bezierCurveTo(this.x - 13, this.y - 10, this.x - 8, this.y - 14, this.x, this.y - 14);
+    ctx.bezierCurveTo(this.x + 8, this.y - 14, this.x + 14, this.y - 8, this.x + 13, this.y + 5);
+    
+
+    if (this.isAnimationMoving) {
+
+      ctx.bezierCurveTo(this.x + 14, this.y + 9, this.x + 13, this.y + 18, this.x + 11, this.y + 14);
+      ctx.bezierCurveTo(this.x + 11, this.y + 15, this.x + 10, this.y + 14, this.x + 8, this.y + 9);
+      ctx.bezierCurveTo(this.x + 8, this.y + 9, this.x + 5, this.y + 14, this.x + 4, this.y + 14);
+      ctx.lineTo(this.x + 2, this.y + 14);
+      ctx.bezierCurveTo(this.x + 2, this.y + 14, this.x + 1, this.y + 10, this.x - 1, this.y + 9);
+      ctx.bezierCurveTo(this.x - 1, this.y + 9, this.x - 4, this.y + 11, this.x - 4, this.y + 14);
+      ctx.bezierCurveTo(this.x - 4, this.y + 14, this.x - 3, this.y + 14, this.x - 6, this.y + 14);
+      ctx.bezierCurveTo(this.x - 6, this.y + 14, this.x - 8, this.y + 14, this.x - 10, this.y + 8);
+      ctx.bezierCurveTo(this.x - 10, this.y + 8, this.x - 11, this.y + 14, this.x - 13, this.y + 14);
+      ctx.bezierCurveTo(this.x - 13, this.y + 14, this.x - 16, this.y + 14, this.x - 15, this.y + 9);
+    } else {
+
+      ctx.bezierCurveTo(this.x + 14, this.y + 9, this.x + 15, this.y + 21, this.x + 6, this.y + 9);
+      ctx.bezierCurveTo(this.x + 6, this.y + 9, this.x + 1, this.y + 14, this.x, this.y + 14);
+      ctx.bezierCurveTo(this.x, this.y + 14, this.x - 2, this.y + 14, this.x - 7, this.y + 9);
+      ctx.bezierCurveTo(this.x - 13, this.y + 17, this.x - 16, this.y + 14, this.x - 15, this.y + 9);
+    }
+
     ctx.fill();
   }
 
@@ -139,40 +165,40 @@ class Ghost extends HTMLElement {
 
 
       if (this.direction === 'right') {
-        xLeftEye = 94;
-        yLeftEye = 95;
-        xRightEye = 104;
-        yRightEye = 95;
+        xLeftEye = this.x - 4;
+        yLeftEye = this.y - 7;
+        xRightEye = this.x + 6;
+        yRightEye = this.y - 7;
         arcXLeftEye = xLeftEye+widthEye*5/32;
         arcYLeftEye = yLeftEye+heightEye/2;
         arcXRightEye = xRightEye+widthEye*5/32;
         arcYRightEye = yRightEye+heightEye/2;
         
       } else if (this.direction === 'down') {
-        xLeftEye = 92;
-        yLeftEye = 97;
-        xRightEye = 102;
-        yRightEye = 97;
+        xLeftEye = this.x - 5;
+        yLeftEye = this.y - 5;
+        xRightEye = this.x + 5;
+        yRightEye = this.y - 5;
         arcXLeftEye = xLeftEye;
         arcYLeftEye = yLeftEye+widthEye*13/16;
         arcXRightEye = xRightEye;
         arcYRightEye = yRightEye+widthEye*13/16;
 
       } else if (this.direction === 'left') {
-        xLeftEye = 90;
-        yLeftEye = 95;
-        xRightEye = 100;
-        yRightEye = 95;
+        xLeftEye = this.x - 7;
+        yLeftEye = this.y - 7;
+        xRightEye = this.x + 3;
+        yRightEye = this.y - 7;
         arcXLeftEye = xLeftEye-widthEye*5/32;
         arcYLeftEye = yLeftEye+heightEye/2;
         arcXRightEye = xRightEye-widthEye*5/32;
         arcYRightEye = yRightEye+heightEye/2;
         
       } else if (this.direction === 'up') {
-        xLeftEye = 92;
-        yLeftEye = 92;
-        xRightEye = 102;
-        yRightEye = 92;
+        xLeftEye = this.x - 5;
+        yLeftEye = this.y - 10;
+        xRightEye = this.x + 5;
+        yRightEye = this.y - 10;
         arcXLeftEye = xLeftEye;
         arcYLeftEye = yLeftEye+widthEye*5/16;
         arcXRightEye = xRightEye;

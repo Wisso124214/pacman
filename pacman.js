@@ -9,13 +9,19 @@ class PacMan extends HTMLElement {
     this.radius = 13;
     this.isOpen = true;
     this.idDirection = 0;
-    this.direction = 'down';
+    this.direction = 'right';
     this.speed = 50 / 10;
+    this.isMissPacman = false;
+    
     this.idMove = this.getIdMove();
     this.getIdAnimationMouth = this.getIdAnimationMouth();
 
     this.setXPacMan(37);
     this.setYPacMan(37);
+  }
+
+  setIsMissPacman(value) {
+    this.isMissPacman = value;
   }
 
   getIdAnimationMouth() {
@@ -58,6 +64,7 @@ class PacMan extends HTMLElement {
   }
 
   printPacMan = (ctx, x, y, idDirection, direction, isOpen, colors, mouthSize, radius ) => {
+    
     const thisRadius = radius || 13;
   
     // Pacman
@@ -90,10 +97,59 @@ class PacMan extends HTMLElement {
       }
   
       ctx.lineTo(mouthX, mouthY);
-      ctx.arc(x, y, radius, Math.PI / 7 + (Math.PI / 2) * idDirection, -Math.PI / 7 + (Math.PI / 2) * idDirection, false);
+      ctx.arc(x, y, thisRadius, Math.PI / 7 + (Math.PI / 2) * idDirection, -Math.PI / 7 + (Math.PI / 2) * idDirection, false);
     } else {
-      ctx.arc(x, y, radius, 0, 2*Math.PI, false);
+      ctx.arc(x, y, thisRadius, 0, 2*Math.PI, false);
     }
+    ctx.fill();
+    
+    if (this.isMissPacman) {
+      this.printBow(ctx, x, y, idDirection, direction, colors, 3.5, thisRadius);
+    }
+  }
+
+  printBow = (ctx, x, y, idDirection, direction, colors, size, radius) => {
+    const knotSize = size*5/8;
+    
+    let xBow = x;
+    let yBow = y;
+    let xKnot = knotSize;
+    let yKnot = knotSize;
+
+    switch (direction) {
+      case 'right':
+        xBow -= radius/2;
+        yBow -= radius/2;
+        break;
+      case 'down':
+        xKnot *= -1;
+        xBow += radius/2;
+        yBow -= radius/2;
+        break;
+      case 'left':
+        xKnot *= -1;
+        xBow += radius/2;
+        yBow -= radius/2;
+        break;
+      case 'up':
+        xKnot *= -1;
+        xBow -= radius/2;
+        yBow += radius/2;
+        break;
+    }
+
+
+    // Draw a bow
+    ctx.fillStyle = colors.bowColor || 'red';
+    ctx.beginPath();
+    
+    ctx.arc(xBow - xKnot, yBow + yKnot, size, 0, Math.PI * 2, true);
+    ctx.arc(xBow + xKnot, yBow - yKnot, size, 0, Math.PI * 2, true);
+    ctx.fill();
+    
+    ctx.beginPath();
+    ctx.fillStyle = 'blue';
+    ctx.arc(xBow, yBow, knotSize, 0, Math.PI * 2, true);
     ctx.fill();
   }
 

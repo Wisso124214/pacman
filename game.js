@@ -20,8 +20,8 @@ class PacMan_Game extends HTMLElement {
 
     this.canvas = document.createElement("canvas");
     this.canvas.id = "canvas";
-    this.canvas.width = 150;
-    this.canvas.height = 150;
+    this.canvas.width = 300;
+    this.canvas.height = 300;
     this.shadow.appendChild(this.canvas);
 
     if (this.canvas.getContext) {
@@ -90,12 +90,7 @@ class PacMan_Game extends HTMLElement {
     
     // Map shapes 
     ctx.strokeStyle = colors.shapesColor;
-    roundedRect(ctx, 12, 12, 150, 150, 15, this.borderWidth);
-    roundedRect(ctx, 19, 19, 150, 150, 9, this.borderWidth);
-    roundedRect(ctx, 53, 53, 49, 33, 10, this.borderWidth);
-    roundedRect(ctx, 53, 119, 49, 16, 6, this.borderWidth);
-    roundedRect(ctx, 135, 53, 49, 33, 10, this.borderWidth);
-    roundedRect(ctx, 135, 119, 25, 49, 10, this.borderWidth);
+    this.drawMapShapes();
 
     // Dots
     ctx.fillStyle = colors.dotsColor;
@@ -121,14 +116,25 @@ class PacMan_Game extends HTMLElement {
     while (performance.now() - this.start < this.fps) { }
     requestAnimationFrame(this.printFrame.bind(this));
   }
+
+  drawMapShapes() {
+    roundedRect(ctx, 12, 12, 150, 150, 10, this.borderWidth);
+    roundedRect(ctx, 19, 19, 150, 150, 6, this.borderWidth);
+    roundedRect(ctx, 53, 53, 49, 33, 18, this.borderWidth);
+    roundedRect(ctx, 53, 119, 49, 16, 18, this.borderWidth);
+    roundedRect(ctx, 135, 53, 49, 33, 18, this.borderWidth);
+    roundedRect(ctx, 135, 119, 25, 49, 18, this.borderWidth);
+  }
 }
 
 // Una función auxiliar para dibujar un rectángulo con esquinas redondeadas.
-function roundedRect(ctx, x, y, width, height, radius, borderWidth) {
+function roundedRect(ctx, x, y, width, height, radiusPercent, borderWidth) {
 
   if (typeof borderWidth === 'undefined') {
     borderWidth = 1;
   }
+
+  const radius = ((width + height) / 2) * (radiusPercent / 100);
 
   ctx.lineWidth = borderWidth;
   ctx.beginPath();

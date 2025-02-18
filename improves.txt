@@ -1,32 +1,32 @@
+  - Generar el mapa del juego dinámicamente
 
-  - PacMan: 
-    . Seleccionar miss o mister pacman (lacito a pacman)
 
-  - Fantasmas:
-    . Crear animación de la base del fantasma (crear la posición con 4 picos abajo y intercambiarlas como el pacman abre y cierra la boca)
+  - Establecer un punto de referencia para cada objeto para que al imprirlos solo se tenga que enviar su punto de referencia
+      . Rectángulos
+      . Puntos
+    ✔✔ Fantasmas
+    ✔✔ Pacman
+
+  - Agrandar un par de pixeles el ancho de los pasillos del mapa
+  - Generar las colisiones
+
+
+✔✔ Fantasmas:
+  ✔✔ Crear animación de la base del fantasma (crear la posición con 4 picos abajo y intercambiarlas como el pacman abre y cierra la boca)
   ✔✔ Crear la cara del fantasma asustado (ojos en X y boca en W)
   ✔✔ Según la dirección establecer la posición de los ojos (pupilas y escleróticas)
   ✔✔ Crear una variable dirección
 
-  
-  - Establecer un punto de referencia para cada objeto para que al imprirlos solo se tenga que enviar su punto de referencia
-      . Rectángulos
-      . Puntos
-      ✔ Fantasmas
-    ✔✔ Pacman
-✔✔ Desacoplar la función de borrar pacman
+✔✔ PacMan: 
+    ✔✔ Seleccionar miss o mister pacman (lacito a pacman)
 
-  - Generar el mapa del juego dinámicamente
-  - Agrandar un par de pixeles el ancho de los pasillos del mapa
-
-
-  
 ✔✔ Definir la orientación del pacman (up, down, left, right) e imprimir a pacman según su orientación
 ✔✔ Trabajar como custom components:
   ✔✔ Fantasmas 
   ✔✔ Juego
   ✔✔ Pacman
 
+✔✔ Desacoplar la función de borrar pacman
 
 
   Preguntar al profe:
