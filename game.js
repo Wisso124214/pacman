@@ -18,10 +18,44 @@ class PacMan_Game extends HTMLElement {
     this.pacman = new PacMan();    
     this.arrGhosts = [0]
 
+    this.map = [
+      '╔════════════╦╦════════════╗',
+      '║............||............║',
+      '║.┌──┐.┌───┐.||.┌───┐.┌──┐.║',
+      '║*|  |.|   |.||.|   |.|  |*║',
+      '║.└──┘.└───┘.└┘.└───┘.└──┘.║',
+      '║..........................║',
+      '║.┌──┐.┌┐.┌──────┐.┌┐.┌──┐.║',
+      '║.└──┘.||.└──┐┌──┘.||.└──┘.║',
+      '║......||....||....||......║',
+      '╚════╗.|└──┐ || ┌──┘|.╔════╝',
+      '     ║.|┌──┘ └┘ └──┐|.║     ',
+      '     ║.||          ||.║     ',
+      '     ║.|| ╔═----═╗ ||.║     ',
+      '═════╝.└┘ ║      ║ └┘.╚═════',
+      '      .   ║      ║   .      ',
+      '═════╗.┌┐ ║      ║ ┌┐.╔═════',
+      '     ║.|| ╚══════╝ ||.║     ',
+      '     ║.||          ||.║     ',
+      '     ║.|| ┌──────┐ ||.║     ',
+      '╔════╝.└┘ └──┐┌──┘ └┘.╚════╗',
+      '║............||............║',
+      '║.┌──┐.┌───┐.||.┌───┐.┌──┐.║',
+      '║.└─┐|.└───┘.└┘.└───┘.|┌─┘.║',
+      '║*..||................||..*║',
+      '╠─┐.||.┌┐.┌──────┐.┌┐.||.┌─╣',
+      '╠─┘.└┘.||.└──┐┌──┘.||.└┘.└─╣',
+      '║......||....||....||......║',
+      '║.┌────┘└──┐.||.┌──┘└────┐.║',
+      '║.└────────┘.└┘.└────────┘.║',
+      '║..........................║',
+      '╚══════════════════════════╝',
+    ]
+
     this.canvas = document.createElement("canvas");
     this.canvas.id = "canvas";
-    this.canvas.width = 300;
-    this.canvas.height = 300;
+    this.canvas.width = 750;
+    this.canvas.height = 800;
     this.shadow.appendChild(this.canvas);
 
     if (this.canvas.getContext) {
@@ -90,21 +124,7 @@ class PacMan_Game extends HTMLElement {
     
     // Map shapes 
     ctx.strokeStyle = colors.shapesColor;
-    this.drawMapShapes();
-
-    // Dots
-    ctx.fillStyle = colors.dotsColor;
-    for (let i = 0; i < 8; i++) {
-      ctx.fillRect(51 + i * this.dotsSeparation, 35, this.dotsWidth, this.dotsWidth);
-    }
-    
-    /*for (let i = 0; i < 6; i++) {
-      ctx.fillRect(115, 51 + i * this.dotsSeparation, this.dotsWidth, this.dotsWidth);
-    }*/
-    
-    /*for (let i = 0; i < 8; i++) {
-      ctx.fillRect(51 + i * this.dotsSeparation, 99, this.dotsWidth, this.dotsWidth);
-    }*/
+    this.drawMap();
 
     this.pacman.printPacMan(ctx, this.pacman.getXPacMan(), this.pacman.getYPacMan(), this.pacman.idDirection, this.pacman.direction, this.pacman.isOpen, colors, this.pacman.mouthSize, this.pacman.radius);
     
@@ -117,33 +137,362 @@ class PacMan_Game extends HTMLElement {
     requestAnimationFrame(this.printFrame.bind(this));
   }
 
-  drawMapShapes() {
-    roundedRect(ctx, 12, 12, 150, 150, 10, this.borderWidth);
-    roundedRect(ctx, 19, 19, 150, 150, 6, this.borderWidth);
-    roundedRect(ctx, 53, 53, 49, 33, 18, this.borderWidth);
-    roundedRect(ctx, 53, 119, 49, 16, 18, this.borderWidth);
-    roundedRect(ctx, 135, 53, 49, 33, 18, this.borderWidth);
-    roundedRect(ctx, 135, 119, 25, 49, 18, this.borderWidth);
+  drawMap() {
+
+    const hallWidth = 25;
+    const sizeOffset = 20;
+    const pelletSize = 5;
+    const borderDoubleMargin = 8;
+
+    const test = [
+      '.*.',
+      '┌─┐',
+      '| |',
+      '└─┘',
+      '╔══╦╦══╗',
+      '║  ||  ║',
+      '║      ║',
+      '╠─┐  ┌─╣',
+      '╠─┘  └─╣',
+      '║      ║',
+      '╚══════╝',
+    ]
+
+    let x0, y0;
+    let x1, y1;
+    let x2, y2;
+    let bx0, by0;
+    let bx1, by1;
+    let bx2, by2; 
+    let radiusDoubleBorder;
+    let isDownBorderLeft = null;
+    let isDownBorderRight = null;
+    let isDownBorderDown = null;
+
+    const radius = hallWidth*5/10;
+
+    // const map = this.map;
+    const map = this.map;
+
+    for (let i in map) {
+      for (let j in map[i]) {
+        
+        ctx.strokeStyle = colors.shapesColor;
+        ctx.lineWidth = this.borderWidth;
+        ctx.beginPath()
+        
+        switch(map[i][j]) {
+          case '.':
+
+            ctx.fillStyle = colors.dotsColor;
+            ctx.fillRect(sizeOffset + hallWidth*j + hallWidth/2, sizeOffset + hallWidth*i + hallWidth/2, this.dotsWidth, this.dotsWidth);
+            break;
+          case '*':
+
+            ctx.fillStyle = colors.dotsColor;
+            ctx.arc(sizeOffset + hallWidth*j + hallWidth/2 + pelletSize*1/3, sizeOffset + hallWidth*i + hallWidth/2 + pelletSize*1/3, pelletSize, 0, Math.PI * 2, true);
+            ctx.fill();
+            break;
+
+          case '┌':
+
+            x0 = hallWidth/2 + sizeOffset + hallWidth*j;
+            y0 = hallWidth + sizeOffset + hallWidth*i;
+            x1 = hallWidth/2 + sizeOffset + hallWidth*j;
+            y1 = hallWidth/2 + sizeOffset + hallWidth*i;
+            x2 = hallWidth + sizeOffset + hallWidth*j;
+            y2 = hallWidth/2 + sizeOffset + hallWidth*i;
+            break;
+          case '┐':
+
+            x0 = 0 + sizeOffset + hallWidth*j;
+            y0 = hallWidth/2 + sizeOffset + hallWidth*i;
+            x1 = hallWidth/2 + sizeOffset + hallWidth*j;
+            y1 =  hallWidth/2 + sizeOffset + hallWidth*i;
+            x2 = hallWidth/2 + sizeOffset + hallWidth*j;
+            y2 = hallWidth + sizeOffset + hallWidth*i;
+            break;
+          case '└':
+
+            x0 = hallWidth/2 + sizeOffset + hallWidth*j;
+            y0 = 0 + sizeOffset + hallWidth*i;
+            x1 = hallWidth/2 + sizeOffset + hallWidth*j;
+            y1 =  hallWidth/2 + sizeOffset + hallWidth*i;
+            x2 = hallWidth + sizeOffset + hallWidth*j;
+            y2 = hallWidth/2 + sizeOffset + hallWidth*i;
+            break;
+          case '┘':
+
+            x0 = 0 + sizeOffset + hallWidth*j;
+            y0 = hallWidth/2 + sizeOffset + hallWidth*i;
+            x1 = hallWidth/2 + sizeOffset + hallWidth*j;
+            y1 =  hallWidth/2 + sizeOffset + hallWidth*i;
+            x2 = hallWidth/2 + sizeOffset + hallWidth*j;
+            y2 = 0 + sizeOffset + hallWidth*i;
+            break;
+          case '─':
+
+            x0 = 0 + sizeOffset + hallWidth*j;
+            y0 = hallWidth/2 + sizeOffset + hallWidth*i;
+            x1 = hallWidth + sizeOffset + hallWidth*j;
+            y1 = hallWidth/2 + sizeOffset + hallWidth*i;
+            break;
+          case '|':
+
+            x0 = hallWidth/2 + sizeOffset + hallWidth*j;
+            y0 = 0 + sizeOffset + hallWidth*i;
+            x1 = hallWidth/2 + sizeOffset + hallWidth*j;
+            y1 = hallWidth + sizeOffset + hallWidth*i;
+            break;
+          case '║':
+
+            x0 = hallWidth/2 + sizeOffset + hallWidth*j;
+            y0 = 0 + sizeOffset + hallWidth*i;
+            x1 = hallWidth/2 + sizeOffset + hallWidth*j;
+            y1 = hallWidth + sizeOffset + hallWidth*i;
+            
+            bx0 = x0 - borderDoubleMargin;
+            by0 = y0;
+            bx1 = x1 - borderDoubleMargin;
+            by1 = y1;
+            break;
+          case '═':
+
+            x0 = 0 + sizeOffset + hallWidth*j;
+            y0 = hallWidth/2 + sizeOffset + hallWidth*i;
+            x1 = hallWidth + sizeOffset + hallWidth*j;
+            y1 = hallWidth/2 + sizeOffset + hallWidth*i;
+            
+            bx0 = x0;
+            by0 = y0 - borderDoubleMargin;
+            bx1 = x1;
+            by1 = y1 - borderDoubleMargin;
+            break;
+          case '╔':
+
+            x0 = hallWidth/2 + sizeOffset + hallWidth*j;
+            y0 = hallWidth + sizeOffset + hallWidth*i;
+            x1 = hallWidth/2 + sizeOffset + hallWidth*j;
+            y1 = hallWidth/2 + sizeOffset + hallWidth*i;
+            x2 = hallWidth + sizeOffset + hallWidth*j;
+            y2 = hallWidth/2 + sizeOffset + hallWidth*i;
+
+            bx0 = x0 - borderDoubleMargin;
+            by0 = y0;
+            bx1 = x1 - borderDoubleMargin;
+            by1 = y1 - borderDoubleMargin;
+            bx2 = x2;
+            by2 = y2 - borderDoubleMargin;
+            radiusDoubleBorder = radius*3/2;
+            break;
+          case '╗':
+
+            x0 = 0 + sizeOffset + hallWidth*j;
+            y0 = hallWidth/2 + sizeOffset + hallWidth*i;
+            x1 = hallWidth/2 + sizeOffset + hallWidth*j;
+            y1 =  hallWidth/2 + sizeOffset + hallWidth*i;
+            x2 = hallWidth/2 + sizeOffset + hallWidth*j;
+            y2 = hallWidth + sizeOffset + hallWidth*i;
+
+            bx0 = x0;
+            by0 = y0 - borderDoubleMargin;
+            bx1 = x1 - borderDoubleMargin;
+            by1 = y1 - borderDoubleMargin;
+            bx2 = x2;
+            by2 = y2 - borderDoubleMargin;
+            radiusDoubleBorder = radius*3/2;
+            break;
+          case '╚':
+            
+            x0 = hallWidth/2 + sizeOffset + hallWidth*j;
+            y0 = 0 + sizeOffset + hallWidth*i;
+            x1 = hallWidth/2 + sizeOffset + hallWidth*j;
+            y1 =  hallWidth/2 + sizeOffset + hallWidth*i;
+            x2 = hallWidth + sizeOffset + hallWidth*j;
+            y2 = hallWidth/2 + sizeOffset + hallWidth*i;
+
+            bx0 = x0 - borderDoubleMargin;
+            by0 = y0;
+            bx1 = x1 - borderDoubleMargin;
+            by1 = y1 - borderDoubleMargin;
+            bx2 = x2 - borderDoubleMargin;
+            radiusDoubleBorder = radius*3/2;
+            by2 = y2;
+            break;
+          case '╝':
+            
+            x0 = 0 + sizeOffset + hallWidth*j;
+            y0 = hallWidth/2 + sizeOffset + hallWidth*i;
+            x1 = hallWidth/2 + sizeOffset + hallWidth*j;
+            y1 =  hallWidth/2 + sizeOffset + hallWidth*i;
+            x2 = hallWidth/2 + sizeOffset + hallWidth*j;
+            y2 = 0 + sizeOffset + hallWidth*i;
+            
+            bx0 = x0 - borderDoubleMargin;
+            by0 = y0 - borderDoubleMargin;
+            bx1 = x1 - borderDoubleMargin;
+            by1 = y1 - borderDoubleMargin;
+            bx2 = x2 - borderDoubleMargin;
+            by2 = y2;
+            radiusDoubleBorder = radius*1/3;
+            break;
+          case '╠':
+
+            x0 = hallWidth/2 + sizeOffset + hallWidth*j - borderDoubleMargin;
+            y0 = 0 + sizeOffset + hallWidth*i;
+            x1 = hallWidth/2 + sizeOffset + hallWidth*j - borderDoubleMargin;
+            y1 = hallWidth + sizeOffset + hallWidth*i;
+
+            ctx.moveTo(x0, y0);
+            ctx.lineTo(x1, y1);
+            ctx.stroke();
+
+
+            if (isDownBorderLeft === null) {
+              isDownBorderLeft = i % 2;
+            }
+
+            if (isDownBorderLeft % 2 === i % 2) {
+              x0 = hallWidth/2 + sizeOffset + hallWidth*j;
+              y0 = 0 + sizeOffset + hallWidth*i;
+              x1 = hallWidth/2 + sizeOffset + hallWidth*j;
+              y1 =  hallWidth/2 + sizeOffset + hallWidth*i;
+              x2 = hallWidth + sizeOffset + hallWidth*j;
+              y2 = hallWidth/2 + sizeOffset + hallWidth*i;
+
+            } else {
+              x0 = hallWidth/2 + sizeOffset + hallWidth*j;
+              y0 = hallWidth + sizeOffset + hallWidth*i;
+              x1 = hallWidth/2 + sizeOffset + hallWidth*j;
+              y1 = hallWidth/2 + sizeOffset + hallWidth*i;
+              x2 = hallWidth + sizeOffset + hallWidth*j;
+              y2 = hallWidth/2 + sizeOffset + hallWidth*i;
+            }
+
+            ctx.moveTo(x0, y0);
+            ctx.arcTo(x1, y1, x2, y2, radius)
+            ctx.lineTo(x2, y2);
+            ctx.stroke();
+
+            isDownBorderLeft = i % 2;
+          /*case '╣':
+
+            x0 = hallWidth/2 + sizeOffset + hallWidth*j - borderDoubleMargin;
+            y0 = 0 + sizeOffset + hallWidth*i;
+            x1 = hallWidth/2 + sizeOffset + hallWidth*j - borderDoubleMargin;
+            y1 = hallWidth + sizeOffset + hallWidth*i;
+
+            ctx.moveTo(x0, y0);
+            ctx.lineTo(x1, y1);
+            ctx.stroke();
+
+
+            if (isDownBorderRight === null) {
+              isDownBorderRight = i % 2;
+            }
+
+            if (isDownBorderRight % 2 === i % 2) {
+              x0 = hallWidth/2 + sizeOffset + hallWidth*j;
+              y0 = 0 + sizeOffset + hallWidth*i;
+              x1 = hallWidth/2 + sizeOffset + hallWidth*j;
+              y1 =  hallWidth/2 + sizeOffset + hallWidth*i;
+              x2 = hallWidth + sizeOffset + hallWidth*j;
+              y2 = hallWidth/2 + sizeOffset + hallWidth*i;
+
+            } else {
+              x0 = hallWidth/2 + sizeOffset + hallWidth*j;
+              y0 = hallWidth + sizeOffset + hallWidth*i;
+              x1 = hallWidth/2 + sizeOffset + hallWidth*j;
+              y1 = hallWidth/2 + sizeOffset + hallWidth*i;
+              x2 = hallWidth + sizeOffset + hallWidth*j;
+              y2 = hallWidth/2 + sizeOffset + hallWidth*i;
+            }
+
+            ctx.moveTo(x0, y0);
+            ctx.arcTo(x1, y1, x2, y2, radius)
+            ctx.lineTo(x2, y2);
+            ctx.stroke();
+
+            isDownBorderRight = i % 2;
+          
+          case '╦':
+
+            x0 = hallWidth/2 + sizeOffset + hallWidth*j - borderDoubleMargin;
+            y0 = 0 + sizeOffset + hallWidth*i;
+            x1 = hallWidth/2 + sizeOffset + hallWidth*j - borderDoubleMargin;
+            y1 = hallWidth + sizeOffset + hallWidth*i;
+
+            ctx.moveTo(x0, y0);
+            ctx.lineTo(x1, y1);
+            ctx.stroke();
+
+
+            if (isDownBorderLeft === null) {
+              isDownBorderLeft = i % 2;
+            }
+
+            if (isDownBorderLeft % 2 === i % 2) {
+              x0 = hallWidth/2 + sizeOffset + hallWidth*j;
+              y0 = 0 + sizeOffset + hallWidth*i;
+              x1 = hallWidth/2 + sizeOffset + hallWidth*j;
+              y1 =  hallWidth/2 + sizeOffset + hallWidth*i;
+              x2 = hallWidth + sizeOffset + hallWidth*j;
+              y2 = hallWidth/2 + sizeOffset + hallWidth*i;
+
+            } else {
+              x0 = hallWidth/2 + sizeOffset + hallWidth*j;
+              y0 = hallWidth + sizeOffset + hallWidth*i;
+              x1 = hallWidth/2 + sizeOffset + hallWidth*j;
+              y1 = hallWidth/2 + sizeOffset + hallWidth*i;
+              x2 = hallWidth + sizeOffset + hallWidth*j;
+              y2 = hallWidth/2 + sizeOffset + hallWidth*i;
+            }
+
+            ctx.moveTo(x0, y0);
+            ctx.arcTo(x1, y1, x2, y2, radius)
+            ctx.lineTo(x2, y2);
+            ctx.stroke();
+
+            isDownBorderLeft = i % 2;
+            break;
+            */
+        }
+
+        if (map[i][j] === '┌' || map[i][j] === '┐' || map[i][j] === '└' || map[i][j] === '┘') {
+          ctx.moveTo(x0, y0);
+          ctx.arcTo(x1, y1, x2, y2, radius)
+          ctx.lineTo(x2, y2);
+          ctx.stroke();
+          
+        } else if (map[i][j] === '─' || map[i][j] === '|') {
+          ctx.moveTo(x0, y0);
+          ctx.lineTo(x1, y1);
+          ctx.stroke();
+
+        } else if (map[i][j] === '╔' || map[i][j] === '╗' || map[i][j] === '╚' || map[i][j] === '╝') {
+          ctx.moveTo(x0, y0);
+          ctx.arcTo(x1, y1, x2, y2, radius)
+          ctx.lineTo(x2, y2);
+          ctx.stroke();
+
+          ctx.moveTo(bx0, by0);
+          ctx.arcTo(bx1, by1, bx2, by2, radiusDoubleBorder)
+          ctx.lineTo(bx2, by2);
+          ctx.stroke();
+          
+        } else if (map[i][j] === '═' || map[i][j] === '║') {
+          ctx.moveTo(x0, y0);
+          ctx.lineTo(x1, y1);
+          ctx.stroke();
+          
+          ctx.beginPath();
+          ctx.moveTo(bx0, by0);
+          ctx.lineTo(bx1, by1);
+          ctx.stroke();
+        }
+      }
+    }
   }
-}
-
-// Una función auxiliar para dibujar un rectángulo con esquinas redondeadas.
-function roundedRect(ctx, x, y, width, height, radiusPercent, borderWidth) {
-
-  if (typeof borderWidth === 'undefined') {
-    borderWidth = 1;
-  }
-
-  const radius = ((width + height) / 2) * (radiusPercent / 100);
-
-  ctx.lineWidth = borderWidth;
-  ctx.beginPath();
-  ctx.moveTo(x, y + radius);
-  ctx.arcTo(x, y + height, x + radius, y + height, radius);
-  ctx.arcTo(x + width, y + height, x + width, y + height - radius, radius);
-  ctx.arcTo(x + width, y, x + width - radius, y, radius);
-  ctx.arcTo(x, y, x, y + radius, radius);
-  ctx.stroke();
 }
 
 customElements.define('lb-pacman-game', PacMan_Game);

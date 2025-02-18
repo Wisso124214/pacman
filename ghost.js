@@ -6,8 +6,8 @@ class Ghost extends HTMLElement {
     super();
 
     this.id = 'ghost'+id;
-    this.x = 80;
-    this.y = 90;
+    this.x = 100;
+    this.y = 200;
     this.speed = 10;
     this.direction = 'right';
     this.idDirection = 0;

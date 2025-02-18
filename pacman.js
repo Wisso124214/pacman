@@ -16,7 +16,7 @@ class PacMan extends HTMLElement {
     this.idMove = this.getIdMove();
     this.getIdAnimationMouth = this.getIdAnimationMouth();
 
-    this.setXPacMan(37);
+    this.setXPacMan(300);
     this.setYPacMan(37);
   }
 
