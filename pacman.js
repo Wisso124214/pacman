@@ -5,19 +5,115 @@ class PacMan extends HTMLElement {
     super();
 
     this.id = 'pacman';
-    this.mouthSize = 2;
-    this.radius = 13;
     this.isOpen = true;
     this.idDirection = 0;
     this.direction = 'right';
-    this.speed = 50 / 10;
+    this.nextDirection = 'right';
+    
+    this.lives = 3;
+    this.mouthSize = 3;
+    this.radius = 14;
+    this.speed = 60 / 10;
     this.isMissPacman = false;
+    this.scorePellets = 10;
+    this.scorePowerPellets = 50;
+    this.scoreGhost = [200, 400, 800, 1600];
+
+    this.startCheckCollision = performance.now();
     
     this.idMove = this.getIdMove();
     this.getIdAnimationMouth = this.getIdAnimationMouth();
 
-    this.setXPacMan(300);
-    this.setYPacMan(37);
+    globalThis.onkeydown = (e) => this.pacmanMove(e);
+  }
+
+  connectedCallback() {
+    this.parent = document.getElementById("pacman-game");
+
+    this.hallWidth = this.parent.getHallWidth();
+    this.sizeOffset = this.parent.getSizeOffset();
+
+    this.pacmanOffset = this.sizeOffset + this.radius/2 + (this.hallWidth-this.radius)/2;
+
+    this.setXPacMan(14*this.hallWidth + this.pacmanOffset);
+    this.setYPacMan(17*this.hallWidth + this.pacmanOffset);
+    
+
+    setInterval(() => {
+      this.checkMapsCollision();
+      
+      this.checkIsFreeDirection(this.nextDirection) && this.setDirection(this.nextDirection);
+    }, fps);
+  }
+
+  checkIsFreeDirection = (direction) => {
+    let x = this.getXPacMan() - this.sizeOffset;
+    let y = this.getYPacMan() - this.sizeOffset;
+
+    switch (direction) {
+      case 'right':
+        x += this.hallWidth;
+        break;
+      case 'down':
+        y += this.hallWidth;
+        break;
+      case 'left':
+        x -= this.hallWidth;
+        break;
+      case 'up':
+        y -= this.hallWidth;
+    }
+
+    const objCollision = this.parent.isColliding(x, y);
+
+    return objCollision.char !== 'wall';
+  }
+  
+  checkMapsCollision() {
+    const offsetWalls = this.hallWidth / 4;
+    let x = this.getXPacMan() - this.sizeOffset;
+    let y = this.getYPacMan() - this.sizeOffset;
+
+    switch (this.direction) {
+      case 'right':
+        x += offsetWalls;
+        break;
+      case 'down':
+        y += offsetWalls;
+        break;
+      case 'left':
+        x -= offsetWalls;
+        break;
+      case 'up':
+        y -= offsetWalls;
+    }
+
+    const objCollision = this.parent.isColliding(x, y);
+
+    if (objCollision.char === 'wall') {
+      if (this.direction === 'right') {
+        this.setXPacMan(this.getXPacMan() - this.speed);
+      } else if (this.direction === 'down') {
+        this.setYPacMan(this.getYPacMan() - this.speed);
+      } else if (this.direction === 'left') {
+        this.setXPacMan(this.getXPacMan() + this.speed);
+      } else if (this.direction === 'up') {
+        this.setYPacMan(this.getYPacMan() + this.speed);
+      }
+    } else if (objCollision.char === '.') {
+      const newMap = this.parent.getMap().map(row => row.split(''));
+      newMap[objCollision.y][objCollision.x - 1] = ' ';
+      this.parent.setMap(newMap.map(row => row.join('')));
+
+      this.parent.increaseScore(this.scorePellets);
+    } else if (objCollision.char === '*') {
+      const newMap = this.parent.getMap().map(row => row.split(''));
+      newMap[objCollision.y][objCollision.x - 1] = ' ';
+      this.parent.setMap(newMap.map(row => row.join('')));
+
+      this.parent.increaseScore(this.scorePowerPellets);
+      this.parent.setGhostsVulnerable();
+    }
   }
 
   setIsMissPacman(value) {
@@ -65,7 +161,7 @@ class PacMan extends HTMLElement {
 
   printPacMan = (ctx, x, y, idDirection, direction, isOpen, colors, mouthSize, radius ) => {
     
-    const thisRadius = radius || 13;
+    this.radius = radius || 13;
   
     // Pacman
     ctx.fillStyle = colors.pacManColor;
@@ -97,14 +193,14 @@ class PacMan extends HTMLElement {
       }
   
       ctx.lineTo(mouthX, mouthY);
-      ctx.arc(x, y, thisRadius, Math.PI / 7 + (Math.PI / 2) * idDirection, -Math.PI / 7 + (Math.PI / 2) * idDirection, false);
+      ctx.arc(x, y, this.radius, Math.PI / 7 + (Math.PI / 2) * idDirection, -Math.PI / 7 + (Math.PI / 2) * idDirection, false);
     } else {
-      ctx.arc(x, y, thisRadius, 0, 2*Math.PI, false);
+      ctx.arc(x, y, this.radius, 0, 2*Math.PI, false);
     }
     ctx.fill();
     
     if (this.isMissPacman) {
-      this.printBow(ctx, x, y, idDirection, direction, colors, 3.5, thisRadius);
+      this.printBow(ctx, x, y, idDirection, direction, colors, 3.5, this.radius);
     }
   }
 
@@ -153,6 +249,10 @@ class PacMan extends HTMLElement {
     ctx.fill();
   }
 
+  setNextDirection(direction) {
+    this.nextDirection = direction;
+  }
+
   setDirection(direction) {
     this.direction = direction;
     
@@ -183,12 +283,57 @@ class PacMan extends HTMLElement {
       console.log(`The attribute ${name} has changed from ${oldValue} to ${newValue}`);
     }
   }
+  
+  pacmanMove(e) {
+    {
+      
+      if (e.key === 'd' || e.key === 'D' || e.key === 'ArrowRight') {
+          this.setNextDirection('right');
+      } else 
+      if (e.key === 's' || e.key === 'S' || e.key === 'ArrowDown') {
+          this.setNextDirection('down');
+      } else 
+      if (e.key === 'a' || e.key === 'A' || e.key === 'ArrowLeft') {
+          this.setNextDirection('left');
+      } else 
+      if (e.key === 'w' || e.key === 'W' || e.key === 'ArrowUp') {
+          this.setNextDirection('up');
+      }
+      
+      /*
+      if (e.key === 'd' || e.key === 'D' || e.key === 'ArrowRight') {
+        for(let a of this.arrGhosts) {
+          this.shadow.getElementById('ghost'+a).setDirection('right');
+        }
+      } else 
+      if (e.key === 's' || e.key === 'S' || e.key === 'ArrowDown') {
+        for(let a of this.arrGhosts) {
+          this.shadow.getElementById('ghost'+a).setDirection('down');
+        }
+      } else 
+      if (e.key === 'a' || e.key === 'A' || e.key === 'ArrowLeft') {
+        for(let a of this.arrGhosts) {
+          this.shadow.getElementById('ghost'+a).setDirection('left');
+        }
+      } else 
+      if (e.key === 'w' || e.key === 'W' || e.key === 'ArrowUp') {
+        for(let a of this.arrGhosts) {
+          this.shadow.getElementById('ghost'+a).setDirection('up');
+        }
+      }
+      */
+    }
+  }
 
   setXPacMan(value) {   this.setAttribute("xPacMan", value);  }
   setYPacMan(value) {   this.setAttribute("yPacMan", value);  }
 
   getXPacMan() {  return parseInt(this.getAttribute("xPacMan"), 10);  }
   getYPacMan() {  return parseInt(this.getAttribute("yPacMan"), 10);  }
+
+  getLives() {
+    return this.lives;
+  }
 }
 
 customElements.define("lb-pacman", PacMan);

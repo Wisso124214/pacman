@@ -9,7 +9,6 @@ const __dirname = path.dirname(__filename);
 const app = express();
 app.use(cors());
 
-// Servir archivos estáticos desde el directorio actual
 app.use(express.static(__dirname));
 
 app.get('/', (req, res) => {

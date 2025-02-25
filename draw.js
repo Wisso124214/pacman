@@ -12,7 +12,7 @@ function draw() {
       backgroundColor: "black",
       shapesColor: "blue",
       pacManColor: "yellow",
-      dotsColor: "white",
+      pelletsColor: "white",
       ghostColor: "red",
       ghostEyeColor: ['white', 'black'],
     };
@@ -99,8 +99,8 @@ function draw() {
       ctx.fill();
     }
     
-    // Dots
-    ctx.fillStyle = colors.dotsColor;
+    // Pellets
+    ctx.fillStyle = colors.pelletsColor;
     for (let i = 0; i < 8; i++) {
       ctx.fillRect(51 + i * 16, 35, 4, 4);
     }

@@ -12,8 +12,8 @@ class PacMan_Game extends HTMLElement {
     this.shadow = this.attachShadow({ mode: "open" });
 
     this.borderWidth = 3;
-    this.dotsWidth = 3.5;
-    this.dotsSeparation = 20;
+    this.pelletsWidth = 3.5;
+    this.pelletsSeparation = 20;
 
     this.pacman = new PacMan();    
     this.arrGhosts = [0]
@@ -213,11 +213,11 @@ class PacMan_Game extends HTMLElement {
             y1 = hallWidth + sizeOffset + hallWidth*i;
             break;
           case '.':
-            ctx.fillStyle = colors.dotsColor;
-            ctx.fillRect(sizeOffset + hallWidth*j + hallWidth/2, sizeOffset + hallWidth*i + hallWidth/2, this.dotsWidth, this.dotsWidth);
+            ctx.fillStyle = colors.pelletsColor;
+            ctx.fillRect(sizeOffset + hallWidth*j + hallWidth/2, sizeOffset + hallWidth*i + hallWidth/2, this.pelletsWidth, this.pelletsWidth);
             break;
           case '*':
-            ctx.fillStyle = colors.dotsColor;
+            ctx.fillStyle = colors.pelletsColor;
             ctx.arc(sizeOffset + hallWidth*j + hallWidth/2 + pelletSize*1/3, sizeOffset + hallWidth*i + hallWidth/2 + pelletSize*1/3, pelletSize, 0, Math.PI * 2, true);
             ctx.fill();
             break;

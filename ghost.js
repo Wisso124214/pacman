@@ -6,17 +6,38 @@ class Ghost extends HTMLElement {
     super();
 
     this.id = 'ghost'+id;
-    this.x = 100;
-    this.y = 200;
-    this.speed = 10;
+    this.parent = document.getElementById("pacman-game");
+    this.hallWidth = this.parent.getHallWidth();
+    this.sizeOffset = this.parent.getSizeOffset();
+    
+    let x = 14;
+    let y = 15;
+
+    switch (id) {
+      case 1:
+        x = 12;
+        break;
+      case 2:
+        x = 16;
+        break;
+    }
+    
+    this.x = x * this.hallWidth + this.sizeOffset;
+    this.y = y * this.hallWidth + this.sizeOffset;
     this.direction = 'right';
-    this.idDirection = 0;
-    this.state = 'default';    //default, scared, blinking
     this.startBlinking = performance.now();
     this.isBlinking = false;
-    this.timeAnimationBlinking = 500;
+    
+    
+    this.vulnerableTime = 10000;
+    this.blinkingTime = 3000;
+    this.speed = 10;
+    this.idDirection = 0;
+    this.state = 'default';    //default, vulnerable, blinking
+    
     this.isAnimationMoving = false;
     this.startAnimationMoving = performance.now();
+    this.timeAnimationBlinking = this.blinkingTime / 6;
 
     //colors
     this.colors = {
@@ -27,7 +48,7 @@ class Ghost extends HTMLElement {
           pupil: allColors.ghost.pupil,
         },
       },
-      scared: {
+      vulnerable: {
         body: 'blue',
         face: 'white',
       },
@@ -35,9 +56,7 @@ class Ghost extends HTMLElement {
         body: 'white',
         face: 'red',
       },
-      
     }
-    
     
     //this.idMove = this.getIdMove();
   }
@@ -56,7 +75,7 @@ class Ghost extends HTMLElement {
     return this.direction;
   }
 
-  printScaredFace(state) {
+  printVulnerableFace(state) {
     this.printBodyGhost(state);
 
     const xLeftEye = this.x - 4;
@@ -138,13 +157,13 @@ class Ghost extends HTMLElement {
 
   printGhost() {
     
-    if (this.state === 'scared') {
-      this.printScaredFace(this.state);
+    if (this.state === 'vulnerable') {
+      this.printVulnerableFace(this.state);
 
     } else if (this.state === 'blinking') {
-      this.printScaredFace(this.isBlinking ? 'blinking' : 'scared');
+      this.printVulnerableFace(this.isBlinking ? 'blinking' : 'vulnerable');
       
-      if ((performance.now() - this.startBlinking) > this.timeAnimationBlinking) {
+      if ((performance.now() - this.startBlinking) > this.timeAnimationBlinking / 1.5) {
         this.isBlinking = !this.isBlinking;
         this.startBlinking = performance.now();
       }
@@ -233,6 +252,18 @@ class Ghost extends HTMLElement {
       ctx.arc(arcXRightEye, arcYRightEye, widthEye/4+.1, 0, Math.PI * 2, true);
       ctx.fill();
     }
+  }
+
+  setVulnerable() {
+    this.state = 'vulnerable';
+
+    setTimeout(() => {
+      this.state = 'blinking';
+
+      setTimeout(() => {
+        this.state = 'default';
+      }, this.blinkingTime);
+    }, this.vulnerableTime - this.blinkingTime);
   }
 }
 
