@@ -37,13 +37,6 @@ class PacMan extends HTMLElement {
 
     this.setXPacMan(14*this.hallWidth + this.pacmanOffset);
     this.setYPacMan(17*this.hallWidth + this.pacmanOffset);
-    
-
-    setInterval(() => {
-      this.checkMapsCollision();
-      
-      this.checkIsFreeDirection(this.nextDirection) && this.setDirection(this.nextDirection);
-    }, fps);
   }
 
   checkIsFreeDirection = (direction) => {
@@ -90,7 +83,7 @@ class PacMan extends HTMLElement {
 
     const objCollision = this.parent.isColliding(x, y);
 
-    if (objCollision.char === 'wall') {
+    if (objCollision.char === 'wall' || objCollision.char === '-') {
       if (this.direction === 'right') {
         this.setXPacMan(this.getXPacMan() - this.speed);
       } else if (this.direction === 'down') {
@@ -128,12 +121,10 @@ class PacMan extends HTMLElement {
 
   getIdMove() {
     return setInterval(() => {
-      if (this.parentNode && 
-          this.parentNode.getElementById("canvas").width > this.getAttribute("xPacMan") &&
-          0 < this.getAttribute("xPacMan") &&
-          this.parentNode.getElementById("canvas").height > this.getAttribute("yPacMan") &&
-          0 < this.getAttribute("yPacMan")
-        ) {
+      this.checkMapsCollision();
+      this.checkIsFreeDirection(this.nextDirection) && this.setDirection(this.nextDirection);
+
+      if (this.parentNode) {
         switch (this.direction) {
           case 'right': 
             this.setXPacMan(this.getXPacMan() + this.speed);

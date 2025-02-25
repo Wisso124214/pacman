@@ -6,9 +6,11 @@ class Ghost extends HTMLElement {
     super();
 
     this.id = 'ghost'+id;
+    this.numberGhost = id;
     this.parent = document.getElementById("pacman-game");
     this.hallWidth = this.parent.getHallWidth();
     this.sizeOffset = this.parent.getSizeOffset();
+    this.isOnBox = true;
     
     let x = 14;
     let y = 15;
@@ -24,14 +26,13 @@ class Ghost extends HTMLElement {
     
     this.x = x * this.hallWidth + this.sizeOffset;
     this.y = y * this.hallWidth + this.sizeOffset;
-    this.direction = 'right';
+    this.direction = 'up';
     this.startBlinking = performance.now();
     this.isBlinking = false;
-    
-    
+        
     this.vulnerableTime = 10000;
     this.blinkingTime = 3000;
-    this.speed = 10;
+    this.speed = 40 / 10;
     this.idDirection = 0;
     this.state = 'default';    //default, vulnerable, blinking
     
@@ -39,6 +40,8 @@ class Ghost extends HTMLElement {
     this.startAnimationMoving = performance.now();
     this.timeAnimationBlinking = this.blinkingTime / 6;
 
+    this.idMove = this.getIdMove();
+    
     //colors
     this.colors = {
       default: {
@@ -57,8 +60,137 @@ class Ghost extends HTMLElement {
         face: 'red',
       },
     }
+  }
+
+  connectedCallback() {
+    this.getOutBox();
+    this.goToPacman();
+  }
+
+  getOutBox() {
     
-    //this.idMove = this.getIdMove();
+    let delay = 0;
+
+    if (this.numberGhost > 0) {
+      delay = Math.floor(Math.random() * 8000 + 2000);
+    }
+
+    const idUpDown = setInterval(() => {
+      const offsetWalls = this.hallWidth / 2;
+      let x = this.x - this.sizeOffset;
+      let y = this.y - this.sizeOffset;
+
+      switch (this.direction) {
+        case 'down':
+          y += offsetWalls;
+          break;
+        case 'up':
+          y -= offsetWalls;
+      }
+      const objCollision = this.parent.isColliding(x, y);
+
+      if (objCollision.char === 'wall' && (this.x - this.sizeOffset)/this.hallWidth !== 14) {
+        this.setDirection(this.direction === 'up' ? 'down' : 'up')
+      }
+    }, fps)
+
+    setTimeout(() => {
+      clearInterval(idUpDown);
+
+      const idSide = setInterval(() => {
+        const x = (this.x - this.sizeOffset)/this.hallWidth;
+        const y = (this.y - this.sizeOffset)/this.hallWidth;
+
+        if (x > 14) {
+          this.setDirection('left');
+        } else if (x < 14) {
+          this.setDirection('right');
+        } else {
+          this.setDirection('up');
+        }
+
+        if (Math.floor(y) === 11) {
+          
+          clearInterval(idSide);
+          this.setDirection(['right', 'left'][Math.round(Math.random()*1)])
+          
+          setTimeout(() => {
+            this.isOnBox = false;
+          }, 500);
+        }
+      }, fps)
+    }, delay);
+  }
+  
+  checkMapsCollision() {
+    const offsetWalls = this.hallWidth / 4;
+    let x = this.x - this.sizeOffset;
+    let y = this.y - this.sizeOffset;
+
+    switch (this.direction) {
+      case 'right':
+        x += offsetWalls;
+        break;
+      case 'down':
+        y += offsetWalls;
+        break;
+      case 'left':
+        x -= offsetWalls;
+        break;
+      case 'up':
+        y -= offsetWalls;
+    }
+
+    const objCollision = this.parent.isColliding(x, y);
+
+    if (objCollision.char === 'wall') {
+      if (!this.isOnBox) {
+        const arrDirections = this.parent.checkIsInIntersection(this.x, this.y);
+        this.setDirection(arrDirections[Math.floor(Math.random() * arrDirections.length)])
+      }
+
+      if (this.direction === 'right') {
+        this.x = this.x - this.speed;
+      } else if (this.direction === 'down') {
+        this.y = this.y - this.speed;
+      } else if (this.direction === 'left') {
+        this.x = this.x + this.speed;
+      } else if (this.direction === 'up') {
+        this.y = this.y + this.speed;
+      }
+    }
+  }
+
+  getIdMove() {
+  return setInterval(() => {
+      this.checkMapsCollision();
+
+      if (this.parentNode) {
+        switch (this.direction) {
+          case 'right': 
+            this.x = (this.x + this.speed);
+            break;
+          case 'down': 
+            this.y = (this.y + this.speed);
+            break;
+          case 'left': 
+            this.x = (this.x - this.speed);
+            break;
+          case 'up': 
+            this.y = (this.y - this.speed);
+            break;
+        }
+      }
+    }, fps);
+  }
+
+  goToPacman() {
+    setInterval(() => {
+      /*if (!this.isOnBox) {
+        const arrDirections = this.parent.checkIsInIntersection(this.x, this.y);
+        this.setDirection(arrDirections[Math.round(Math.random() * arrDirections.length)])
+      }*/
+    }, fps)
   }
 
   setDirection(direction) {

@@ -12,7 +12,7 @@ class PacMan_Game extends HTMLElement {
     this.initializeVariables();
 
     this.pacman = new PacMan();    
-    this.arrGhosts = [0]
+    this.arrGhosts = [0, 1, 2, 3]
 
     this.canvas = document.createElement("canvas");
     this.canvas.id = "canvas";
@@ -45,6 +45,8 @@ class PacMan_Game extends HTMLElement {
     this.canvasWidth = 650;
     this.canvasHeight = 760;
     this.score = 0;
+
+    this.nonWallChars = [' ', '*', '.', '-'];
     
     this.map = [
       '╔════════════╦╦════════════╗',
@@ -529,11 +531,10 @@ class PacMan_Game extends HTMLElement {
     const xMap = Math.ceil(x / this.hallWidth);
     const yMap = Math.floor(y / this.hallWidth);
 
-    const nonWallChars = [' ', '*', '.'];
     const mapChar = this.map[yMap][xMap-1];
 
-    for (let n in nonWallChars) {
-      if (mapChar === nonWallChars[n]) {
+    for (let n in this.nonWallChars) {
+      if (mapChar === this.nonWallChars[n]) {
         return {
           x: xMap,
           y: yMap,
@@ -550,22 +551,22 @@ class PacMan_Game extends HTMLElement {
   }
 
   checkIsInIntersection(x, y) {
-    let ammo = 0;
+    let ammo = [];
 
     if (this.isColliding(x, y - this.hallWidth).char !== 'wall') {
-      ammo++;
+      ammo.push('up')
     }
     if (this.isColliding(x, y + this.hallWidth).char !== 'wall') {
-      ammo++;
+      ammo.push('down')
     }
     if (this.isColliding(x - this.hallWidth, y).char !== 'wall') {
-      ammo++;
+      ammo.push('left')
     }
     if (this.isColliding(x + this.hallWidth, y).char !== 'wall') {
-      ammo++;
+      ammo.push('right')
     }
 
-    return ammo >= 3;
+    return ammo;
   }
 
   setGhostsVulnerable() {
