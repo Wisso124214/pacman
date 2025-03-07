@@ -2,50 +2,27 @@ import { colors as allColors } from './consts.js';
 
 
 class Ghost extends HTMLElement {
-  constructor(id) {
+  constructor(id, color, player) {
     super();
-
+    
     this.id = 'ghost'+id;
     this.numberGhost = id;
     this.parent = document.getElementById("pacman-game");
+    this.pacman = this.parent.getPacman();
     this.hallWidth = this.parent.getHallWidth();
     this.sizeOffset = this.parent.getSizeOffset();
-    this.isOnBox = true;
-    
-    let x = 14;
-    let y = 15;
+    this.startDeadInterval = performance.now() + 1000;
 
-    switch (id) {
-      case 1:
-        x = 12;
-        break;
-      case 2:
-        x = 16;
-        break;
-    }
+    this.initialize(color);
     
-    this.x = x * this.hallWidth + this.sizeOffset;
-    this.y = y * this.hallWidth + this.sizeOffset;
-    this.direction = 'up';
-    this.startBlinking = performance.now();
-    this.isBlinking = false;
-        
+    this.player = player === undefined ? '' : player;
     this.vulnerableTime = 10000;
     this.blinkingTime = 3000;
-    this.speed = 40 / 10;
-    this.idDirection = 0;
-    this.state = 'default';    //default, vulnerable, blinking
-    
-    this.isAnimationMoving = false;
-    this.startAnimationMoving = performance.now();
-    this.timeAnimationBlinking = this.blinkingTime / 6;
-
-    this.idMove = this.getIdMove();
     
     //colors
     this.colors = {
       default: {
-        body: allColors.ghost.colors[id] === undefined ? allColors.ghost.colors[0] : allColors.ghost.colors[id],
+        body: color ? color : allColors.ghost.defaultColor,
         eyes: {
           sclera: allColors.ghost.sclera,
           pupil: allColors.ghost.pupil,
@@ -59,23 +36,83 @@ class Ghost extends HTMLElement {
         body: 'white',
         face: 'red',
       },
+      dead: {
+        body: 'transparent',
+        face: 'transparent',
+      },
+    }
+  }
+
+  initialize(color) {
+    this.isOnBox = true;
+    this.isOpenDoorBox = false;
+    
+    let x = 14;
+    let y = 15;
+
+    switch (this.id.split('ghost')[1]) {
+      case '0': 
+        x = 14;
+        break;
+      case '1':
+        x = 12;
+        break;
+      case '2':
+        x = 16;
+        break;
+      default:
+        x = 14 + Math.floor(Math.random() * 2) * Math.pow(-1, Math.floor(Math.random() * 2));
+        break;
+    }
+    
+    this.x = x * this.hallWidth + this.sizeOffset;
+    this.y = y * this.hallWidth + this.sizeOffset;
+    this.lastX = this.x;
+    this.lastY = this.y;
+    this.direction = 'up';
+    this.nextDirection = 'down';
+    this.startBlinking = performance.now();
+    this.isBlinking = false;
+    // this.probMove = 0.5;
+    this.probMove = 0;        //1 random, 0 pacman
+
+    this.speed = 40 / 10;
+    this.idDirection = 0;
+    this.state = 'default';    //default, vulnerable, blinking
+    console.log(this.state, color)
+
+    this.isAnimationMoving = false;
+    this.startAnimationMoving = performance.now();
+    this.timeAnimationBlinking = this.blinkingTime / 6;
+
+    this.idMove = this.getIdMove();
+
+    if (this.isConnected) {
+      this.autoMove();
     }
   }
 
   connectedCallback() {
-    this.getOutBox();
-    this.goToPacman();
+    this.autoMove();
+  }
+
+  autoMove() {
+
+    if (this.player === '') {
+      this.getOutBox();
+    } else {
+      this.isOpenDoorBox = true;
+    }
   }
 
   getOutBox() {
-    
     let delay = 0;
 
     if (this.numberGhost > 0) {
       delay = Math.floor(Math.random() * 8000 + 2000);
     }
 
-    const idUpDown = setInterval(() => {
+    this.idUpDown = setInterval(() => {
       const offsetWalls = this.hallWidth / 2;
       let x = this.x - this.sizeOffset;
       let y = this.y - this.sizeOffset;
@@ -89,66 +126,224 @@ class Ghost extends HTMLElement {
       }
       const objCollision = this.parent.isColliding(x, y);
 
-      if (objCollision.char === 'wall' && (this.x - this.sizeOffset)/this.hallWidth !== 14) {
-        this.setDirection(this.direction === 'up' ? 'down' : 'up')
+      if (objCollision.char === 'wall' || objCollision.char === '-') {
+        this.setNextDirection(this.direction === 'up' ? 'down' : 'up')
       }
     }, fps)
 
     setTimeout(() => {
-      clearInterval(idUpDown);
+      this.isOpenDoorBox = true;
+      clearInterval(this.idUpDown);
 
-      const idSide = setInterval(() => {
+      this.idSide = setInterval(() => {
         const x = (this.x - this.sizeOffset)/this.hallWidth;
         const y = (this.y - this.sizeOffset)/this.hallWidth;
 
-        if (x > 14) {
-          this.setDirection('left');
+        if (x > 15) {
+          this.setNextDirection('left');
         } else if (x < 14) {
-          this.setDirection('right');
+          this.setNextDirection('right');
         } else {
-          this.setDirection('up');
+          this.setNextDirection('up');
         }
 
         if (Math.floor(y) === 11) {
           
-          clearInterval(idSide);
-          this.setDirection(['right', 'left'][Math.round(Math.random()*1)])
+          clearInterval(this.idSide);
+          this.setNextDirection(['right', 'left'][Math.round(Math.random()*1)])
           
           setTimeout(() => {
             this.isOnBox = false;
+            this.isOpenDoorBox = false;
           }, 500);
         }
       }, fps)
     }, delay);
   }
+
+  checkPacmanCollision() {
+    
+    const xPacman = this.pacman.getXPacMan() - this.sizeOffset;
+    const yPacman = this.pacman.getYPacMan() - this.sizeOffset;
+
+    const radiusPacman = this.pacman.getRadius();
+    const x = this.x - this.sizeOffset;
+    const y = this.y - this.sizeOffset;
+
+    const pacmanOffset = this.hallWidth / 2;
+    const x1 = xPacman - radiusPacman - pacmanOffset;
+    const x2 = xPacman + radiusPacman + pacmanOffset;
+    const y1 = yPacman - radiusPacman - pacmanOffset;
+    const y2 = yPacman + radiusPacman + pacmanOffset;
+
+    if (x1 < x && x < x2 && y1 < y && y < y2) {
+      if (this.state !== 'default') {
+        this.state = 'dead';
+        console.log(this.state, this.colors.default.body)
+        this.reset(Math.random() * 5000 + 2000);
+
+      } else if (this.state === 'default') {
+        this.startDeadInterval = performance.now();
+        this.parent.setGameState('pacman-dead');
+      }
+    }
+  }
   
   checkMapsCollision() {
     const offsetWalls = this.hallWidth / 4;
+    //check this.x and this.y
     let x = this.x - this.sizeOffset;
     let y = this.y - this.sizeOffset;
+
+    const offsetCollision = this.hallWidth / 6;
+    let xCollision = x;
+    let yCollision = y;
 
     switch (this.direction) {
       case 'right':
         x += offsetWalls;
+        xCollision -= offsetCollision;
         break;
       case 'down':
         y += offsetWalls;
+        yCollision -= offsetCollision;
         break;
       case 'left':
         x -= offsetWalls;
+        xCollision += offsetCollision;
         break;
       case 'up':
         y -= offsetWalls;
+        yCollision += offsetCollision;
+        break;
     }
 
     const objCollision = this.parent.isColliding(x, y);
 
-    if (objCollision.char === 'wall') {
-      if (!this.isOnBox) {
-        const arrDirections = this.parent.checkIsInIntersection(this.x, this.y);
-        this.setDirection(arrDirections[Math.floor(Math.random() * arrDirections.length)])
-      }
+    if (!this.isOnBox && this.player === '') {
+      const arrDirections = this.parent.checkIsInIntersection(xCollision, yCollision);
 
+      const random = Math.random();
+
+      if (random < this.probMove) {
+        const xPacman = this.pacman.getXPacMan();
+        const yPacman = this.pacman.getYPacMan();
+
+        if (yPacman < this.y) {
+          let subArrDirections = []
+          if (arrDirections.includes('up')) {
+            
+            if (this.state !== 'default' && arrDirections.includes('down')) {
+              // this.setNextDirection('down');
+              subArrDirections.push('down');
+            } else {
+              // this.setNextDirection('up');
+              subArrDirections.push('up');
+            }
+          } else if (xPacman < this.x) {
+
+            if (arrDirections.includes('left')) {
+              
+              if (this.state !== 'default' && arrDirections.includes('right')) {
+                // this.setNextDirection('right');
+                subArrDirections.push('right');
+              } else {
+                // this.setNextDirection('left');
+                subArrDirections.push('left');
+              }
+            } else if (arrDirections.includes('right')) {
+              
+              if (this.state !== 'default' && arrDirections.includes('left')) {
+                // this.setNextDirection('left');
+                subArrDirections.push('left');
+              } else {
+                // this.setNextDirection('right');
+                subArrDirections.push('right');
+              }
+            } else if (arrDirections.includes('down')) {
+              
+              if (this.state !== 'default' && arrDirections.includes('up')) {
+                // this.setNextDirection('up');
+                subArrDirections.push('up');
+              } else {
+                // this.setNextDirection('down');
+                subArrDirections.push('down');
+              }
+            }
+
+            if (subArrDirections.length > 0) {
+              const subDirection = subArrDirections[Math.floor(Math.random() * subArrDirections.length)];
+              this.setNextDirection(subDirection);
+            }
+          }
+        } else {
+          
+          let subArrDirections = []
+          if (arrDirections.includes('down')) {
+            
+            if (this.state !== 'default' && arrDirections.includes('down')) {
+              // this.setNextDirection('up');
+              subArrDirections.push('up');
+            } else {
+              // this.setNextDirection('down');
+              subArrDirections.push('down');
+            }
+          } else if (xPacman < this.x) {
+
+            if (arrDirections.includes('left')) {
+              
+              if (this.state !== 'default' && arrDirections.includes('right')) {
+                // this.setNextDirection('right');
+                subArrDirections.push('right');
+              } else {
+                // this.setNextDirection('left');
+                subArrDirections.push('left');
+              }
+            } else if (arrDirections.includes('right')) {
+              
+              if (this.state !== 'default' && arrDirections.includes('left')) {
+                // this.setNextDirection('left');
+                subArrDirections.push('left');
+              } else {
+                // this.setNextDirection('right');
+                subArrDirections.push('right');
+              }
+            } else if (arrDirections.includes('up')) {
+              
+              if (this.state !== 'default' && arrDirections.includes('up')) {
+                // this.setNextDirection('down');
+                subArrDirections.push('down');
+              } else {
+                // this.setNextDirection('up');
+                subArrDirections.push('up');
+              }
+            }
+
+            if (subArrDirections.length > 0) {
+              const random = Math.floor(Math.random() * subArrDirections.length);
+              const subDirection = subArrDirections[random];
+              this.setNextDirection(subDirection);
+            }
+          }
+        }
+      } else {
+
+        //Random direction
+        if (arrDirections.length >= 2) {
+          let ran;
+          
+          do {
+            ran = Math.floor(Math.random() * arrDirections.length);
+          } while (arrDirections[ran] === this.parent.getOppositeDirection(this.direction))
+          
+          this.setNextDirection(arrDirections[ran]);
+        }
+      }
+    }
+
+    const isWalls = this.isOpenDoorBox ? objCollision.char === 'wall' : objCollision.char === 'wall' || objCollision.char === '-';
+
+    if (isWalls) {
       if (this.direction === 'right') {
         this.x = this.x - this.speed;
       } else if (this.direction === 'down') {
@@ -162,8 +357,64 @@ class Ghost extends HTMLElement {
   }
 
   getIdMove() {
-  return setInterval(() => {
+    this.idKeepMove = setInterval(() => {
+      if (!this.isOnBox) {
+        if (this.x === this.lastX && this.y === this.lastY && this.player === '') {
+          const offsetWalls = this.hallWidth / 4;
+          
+          let x = this.x - this.sizeOffset;
+          let y = this.y - this.sizeOffset;
+      
+          const offsetCollision = this.hallWidth / 6;
+          let xCollision = x;
+          let yCollision = y;
+      
+          switch (this.direction) {
+            case 'right':
+              x += offsetWalls;
+              xCollision -= offsetCollision;
+              break;
+            case 'down':
+              y += offsetWalls;
+              yCollision -= offsetCollision;
+              break;
+            case 'left':
+              x -= offsetWalls;
+              xCollision += offsetCollision;
+              break;
+            case 'up':
+              y -= offsetWalls;
+              yCollision += offsetCollision;
+              break;
+          }
+
+          const arrDirections = this.parent.checkIsInIntersection(xCollision, yCollision);
+          const dir = arrDirections[Math.floor(Math.random() * (arrDirections.length))]
+          this.setNextDirection(dir)
+          
+          if (dir === undefined) {
+            console.log(dir, this.colors.default.body)
+          }
+        }
+
+        this.lastX = this.x;
+        this.lastY = this.y;
+      }
+    }, fps * 10);
+
+    return setInterval(() => {
       this.checkMapsCollision();
+      this.checkPacmanCollision();
+
+      if (this.isOpenDoorBox) {
+        const y = (this.y - this.sizeOffset) / this.hallWidth;
+
+        if (y <= 12 && this.player !== '') {
+          this.isOpenDoorBox = false;
+          this.isOnBox = false;
+          console.log('door closed')
+        }
+      }
 
       if (this.parentNode) {
         switch (this.direction) {
@@ -180,17 +431,10 @@ class Ghost extends HTMLElement {
             this.y = (this.y - this.speed);
             break;
         }
+        
+        this.parent.checkIsFreeDirection(this.x - this.sizeOffset, this.y - this.sizeOffset, this.nextDirection) && this.setDirection(this.nextDirection);
       }
     }, fps);
-  }
-
-  goToPacman() {
-    setInterval(() => {
-      /*if (!this.isOnBox) {
-        const arrDirections = this.parent.checkIsInIntersection(this.x, this.y);
-        this.setDirection(arrDirections[Math.round(Math.random() * arrDirections.length)])
-      }*/
-    }, fps)
   }
 
   setDirection(direction) {
@@ -201,6 +445,10 @@ class Ghost extends HTMLElement {
       left: 2,
       up: 3,
     }[direction];
+  }
+
+  setNextDirection(direction) {
+    this.nextDirection = direction;
   }
 
   getDirection() {
@@ -354,6 +602,16 @@ class Ghost extends HTMLElement {
         arcYLeftEye = yLeftEye+widthEye*5/16;
         arcXRightEye = xRightEye;
         arcYRightEye = yRightEye+widthEye*5/16;
+
+      } else {
+        xLeftEye = this.x - 5;
+        yLeftEye = this.y - 7;
+        xRightEye = this.x + 5;
+        yRightEye = this.y - 7;
+        arcXLeftEye = xLeftEye;
+        arcYLeftEye = yLeftEye+heightEye/2;
+        arcXRightEye = xRightEye;
+        arcYRightEye = yRightEye+heightEye/2;
       }
 
       // Eyes sclera
@@ -388,14 +646,38 @@ class Ghost extends HTMLElement {
 
   setVulnerable() {
     this.state = 'vulnerable';
+    console.log(this.state, this.colors.default.body)
 
     setTimeout(() => {
-      this.state = 'blinking';
+      if (this.state !== 'default') {
+        this.state = 'blinking';
+        console.log(this.state, this.colors.default.body)
 
-      setTimeout(() => {
-        this.state = 'default';
-      }, this.blinkingTime);
+        setTimeout(() => {
+          this.state = 'default';
+          console.log(this.state, this.colors.default.body)
+        }, this.blinkingTime);
+      }
     }, this.vulnerableTime - this.blinkingTime);
+  }
+
+  pause() {
+    clearInterval(this.idMove);
+    clearInterval(this.idKeepMove);
+    clearInterval(this.idUpDown);
+    clearInterval(this.idSide);
+  }
+
+  continue() {
+    this.idMove = this.getIdMove();
+  }
+
+  reset(time) {
+    this.pause();
+
+    setTimeout(() => {
+      this.initialize(this.colors.default.body);
+    }, time);
   }
 }
 

@@ -9,10 +9,29 @@ class PacMan_Game extends HTMLElement {
     this.id = 'pacman-game';
     this.shadow = this.attachShadow({ mode: "open" });
 
-    this.initializeVariables();
+    this.initialize();
 
-    this.pacman = new PacMan();    
-    this.arrGhosts = [0, 1, 2, 3]
+    this.pacman = new PacMan('p1');
+    this.ghosts = [
+      {
+        color: colors.ghost.colors[0],
+      },
+      {
+        color: colors.ghost.colors[3],
+      },
+      {
+        color: colors.ghost.colors[2],
+        // player: 'p1',
+      },
+      {
+        color: colors.ghost.colors[1],
+      },
+    ]
+    // this.ghosts = [
+    //   {
+    //     color: colors.ghost.colors[0],
+    //   },
+    // ]
 
     this.canvas = document.createElement("canvas");
     this.canvas.id = "canvas";
@@ -27,16 +46,19 @@ class PacMan_Game extends HTMLElement {
     }
     this.shadow.appendChild(this.pacman);
 
-    for(let a of this.arrGhosts) {
-
-      this['ghost'+a] = new Ghost(a);
+    for(let a in this.ghosts) {
+      this['ghost'+a] = new Ghost(a, this.ghosts[a].color, this.ghosts[a].player);
       this.shadow.appendChild(this['ghost'+a]);
     }
+
+    globalThis.onkeydown = (e) => this.manualMovement(e);
   }
 
-  initializeVariables() {
-    globalThis.fps = 1000 / 20;
-
+  initialize() {
+    globalThis.fps = 1000 / 30;
+    // globalThis.fps = 1000 / 1000;
+    
+    this.reviveTime = 1000;
     this.hallWidth = 22;
     // this.sizeOffset = (Math.abs((this.hallWidth * this.map.length) - this.canvas.width))*2;
     this.sizeOffset = 20;
@@ -45,6 +67,7 @@ class PacMan_Game extends HTMLElement {
     this.canvasWidth = 650;
     this.canvasHeight = 760;
     this.score = 0;
+    this.gameState = 'playing';
 
     this.nonWallChars = [' ', '*', '.', '-'];
     
@@ -98,11 +121,31 @@ class PacMan_Game extends HTMLElement {
     ctx.strokeStyle = colors.shapesColor;
     this.drawMap();
 
-    this.pacman.printPacMan(ctx, this.pacman.getXPacMan(), this.pacman.getYPacMan(), this.pacman.idDirection, this.pacman.direction, this.pacman.isOpen, colors, this.pacman.mouthSize, this.pacman.radius);
+    if (this.gameState !== 'game-over') {
+      this.pacman.printPacMan(ctx, this.pacman.getXPacMan(), this.pacman.getYPacMan(), this.pacman.idDirection, this.pacman.direction, this.pacman.isOpen, colors, this.pacman.mouthSize, this.pacman.radius);
     
-    for(let a of this.arrGhosts) {
-      this.shadow.getElementById("ghost"+a).printGhost();
+      for(let a in this.ghosts) {
+        this.shadow.getElementById('ghost'+a).printGhost();
+      }
+    } else {
+      ctx.beginPath();
+      ctx.fillStyle = 'red';
+      ctx.font = "bold 28px Courier New";
+      ctx.fillText('GAME OVER', this.canvas.width/2 - 70, (18 * this.hallWidth) + this.sizeOffset);  
+      
+      this.gameOver();
     }
+
+    const text = 'Score: ' + this.score;
+    
+    ctx.beginPath();
+    ctx.fillStyle = colors.pelletsColor;
+    ctx.font = "bold 28px Courier New";
+    ctx.fillText(text, this.sizeOffset*1.5, this.canvas.height - 20);
+
+    this.printPacmanLives(this.pacman.getLives());
+
+    this.checkGameState();
 
     //sleep
     while (performance.now() - this.start < this.fps) { }
@@ -472,13 +515,6 @@ class PacMan_Game extends HTMLElement {
         }
       }
     }
-
-    const text = 'Score: ' + this.score;
-
-    ctx.font="bold 28px Courier New";
-    ctx.fillText(text, this.sizeOffset*1.5, this.canvas.height - 20);
-
-    this.printPacmanLives(this.pacman.getLives());
   }
 
   printPacmanLives(lives) {
@@ -528,9 +564,16 @@ class PacMan_Game extends HTMLElement {
   }
 
   isColliding(x, y) {
-    const xMap = Math.ceil(x / this.hallWidth);
-    const yMap = Math.floor(y / this.hallWidth);
+    const xMap = Math.ceil(parseInt(x, 10) / this.hallWidth);
+    const yMap = Math.floor(parseInt(y, 10) / this.hallWidth);
 
+    if (typeof this.map[yMap] === 'undefined' || typeof this.map[yMap][xMap] === 'undefined') {
+      return {
+        x: xMap,
+        y: yMap,
+        char: 'wall',
+      }
+    }
     const mapChar = this.map[yMap][xMap-1];
 
     for (let n in this.nonWallChars) {
@@ -548,6 +591,26 @@ class PacMan_Game extends HTMLElement {
       y: yMap,
       char: 'wall',
     };
+  }
+
+  checkIsFreeDirection = (x, y, direction) => {
+    switch (direction) {
+      case 'right':
+        x += this.hallWidth;
+        break;
+      case 'down':
+        y += this.hallWidth;
+        break;
+      case 'left':
+        x -= this.hallWidth;
+        break;
+      case 'up':
+        y -= this.hallWidth;
+    }
+
+    const objCollision = this.isColliding(x, y);
+
+    return objCollision.char !== 'wall';
   }
 
   checkIsInIntersection(x, y) {
@@ -570,9 +633,125 @@ class PacMan_Game extends HTMLElement {
   }
 
   setGhostsVulnerable() {
-    for(let a of this.arrGhosts) {
+    for(let a in this.ghosts) {
       this['ghost'+a].setVulnerable();
     }
+  }
+
+  manualMovement(e) {
+
+    let characters = [this.pacman]
+
+    for (let g in this.ghosts) {
+      characters.push(this['ghost'+g])
+    }
+
+    for (let a in characters) {
+      const player = characters[a].player;
+
+      // console.log(characters[a])
+
+      if (player === 'p1') {
+        
+        if (e.key === 'ArrowRight') {
+          this[characters[a].id].setNextDirection('right');
+        } else 
+        if (e.key === 'ArrowDown') {
+            this[characters[a].id].setNextDirection('down');
+        } else 
+        if (e.key === 'ArrowLeft') {
+            this[characters[a].id].setNextDirection('left');
+        } else 
+        if (e.key === 'ArrowUp') {
+            this[characters[a].id].setNextDirection('up');
+        }
+      } else if (player === 'p2') {
+  
+        if (e.key === 'd' || e.key === 'D') {
+          this[characters[a].id].setNextDirection('right');
+        } else 
+        if (e.key === 's' || e.key === 'S') {
+            this[characters[a].id].setNextDirection('down');
+        } else 
+        if (e.key === 'a' || e.key === 'A') {
+            this[characters[a].id].setNextDirection('left');
+        } else 
+        if (e.key === 'w' || e.key === 'W') {
+            this[characters[a].id].setNextDirection('up');
+        }
+      }
+
+      if (e.key === 'p' || e.key === 'P') {
+        if (this.gameState === 'playing') {
+          this[characters[a].id].pause();
+          this.gameState = 'paused';
+        } else if (this.gameState !== 'game-over') {
+          this[characters[a].id].continue();
+          this.gameState = 'playing';
+        }
+      }
+    }
+  }
+
+  getOppositeDirection(direction) {
+    let opposite = '';
+
+    switch(direction) {
+      case 'up':
+        opposite = 'down';
+        break;
+      case 'down':
+        opposite = 'up';
+        break;
+      case 'left':
+        opposite = 'right';
+        break;
+      case 'right':
+        opposite = 'left';
+        break;
+    }
+
+    return opposite;
+  }
+
+  getPacman() {
+    return this.pacman;
+  }
+
+  getReviveTime() {
+    return this.reviveTime;
+  }
+
+  setGameState(state) {
+    this.gameState = state;
+  }
+
+  getGameState() {
+    return this.gameState;
+  }
+
+  checkGameState() {
+    if (this.gameState === 'pacman-dead' && this.gameState !== 'game-over') {
+      this.gameState = 'playing';
+      
+      if (this.pacman.getLives() > 1) {
+        for (let g in this.ghosts) {
+          this['ghost'+g].reset(this.reviveTime);
+        }
+        this.pacman.reset(this.reviveTime);
+      } else {
+        this.gameState = 'game-over';
+      }
+
+      this.pacman.setLives(-1);
+    }
+  }
+
+  gameOver() {
+    for (let g in this.ghosts) {
+      this['ghost'+g].pause();
+    }
+    this.pacman.pause();
   }
 }
 

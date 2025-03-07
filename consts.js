@@ -7,6 +7,7 @@ export const colors = {
   
   ghost: {
     colors: ["red", "fuchsia", "orange", "aqua", "teal", "olive"],
+    defaultColor: 'red',
     pupil: 'blue',
     sclera: 'white',
   },

@@ -6,7 +6,7 @@ class PacMan_Game extends HTMLElement {
   constructor() {
     super();
     
-    globalThis.fps = 1000 / 20;
+    globalThis.fps = 1000 / 100;
 
     this.id = 'pacman-game';
     this.shadow = this.attachShadow({ mode: "open" });

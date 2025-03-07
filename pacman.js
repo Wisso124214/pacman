@@ -1,89 +1,94 @@
 import { colors } from './consts.js';
 
 class PacMan extends HTMLElement {
-  constructor() {
+  constructor(player) {
     super();
 
     this.id = 'pacman';
+    this.player = player ? player : '';
+    
+    this.lives = 3;
+    this.mouthSize = 3;
+    this.radius = 14;
+    this.isMissPacman = false;
+    this.scorePellets = 10;
+    this.scorePowerPellets = 50;
+    this.scoreGhost = [200, 400, 800, 1600];
+  }
+
+  initialize() {
     this.isOpen = true;
     this.idDirection = 0;
     this.direction = 'right';
     this.nextDirection = 'right';
     
-    this.lives = 3;
-    this.mouthSize = 3;
-    this.radius = 14;
     this.speed = 60 / 10;
-    this.isMissPacman = false;
-    this.scorePellets = 10;
-    this.scorePowerPellets = 50;
-    this.scoreGhost = [200, 400, 800, 1600];
-
     this.startCheckCollision = performance.now();
-    
-    this.idMove = this.getIdMove();
-    this.getIdAnimationMouth = this.getIdAnimationMouth();
-
-    globalThis.onkeydown = (e) => this.pacmanMove(e);
-  }
-
-  connectedCallback() {
-    this.parent = document.getElementById("pacman-game");
-
-    this.hallWidth = this.parent.getHallWidth();
-    this.sizeOffset = this.parent.getSizeOffset();
-
-    this.pacmanOffset = this.sizeOffset + this.radius/2 + (this.hallWidth-this.radius)/2;
 
     this.setXPacMan(14*this.hallWidth + this.pacmanOffset);
     this.setYPacMan(17*this.hallWidth + this.pacmanOffset);
+    
+    this.idMove = this.getIdMove();
+    this.idAnimationMouth = this.getIdAnimationMouth();
+  }
+  
+  connectedCallback() {
+    this.parent = document.getElementById("pacman-game");
+    this.hallWidth = this.parent.getHallWidth();
+    this.sizeOffset = this.parent.getSizeOffset();
+    this.pacmanOffset = this.sizeOffset + this.radius/2 + (this.hallWidth-this.radius)/2;
+
+    this.initialize();
   }
 
-  checkIsFreeDirection = (direction) => {
-    let x = this.getXPacMan() - this.sizeOffset;
-    let y = this.getYPacMan() - this.sizeOffset;
-
-    switch (direction) {
-      case 'right':
-        x += this.hallWidth;
-        break;
-      case 'down':
-        y += this.hallWidth;
-        break;
-      case 'left':
-        x -= this.hallWidth;
-        break;
-      case 'up':
-        y -= this.hallWidth;
-    }
-
-    const objCollision = this.parent.isColliding(x, y);
-
-    return objCollision.char !== 'wall';
-  }
   
   checkMapsCollision() {
     const offsetWalls = this.hallWidth / 4;
     let x = this.getXPacMan() - this.sizeOffset;
     let y = this.getYPacMan() - this.sizeOffset;
 
+    const offsetCollision = this.hallWidth / 2;
+    let xCollision = x;
+    let yCollision = y;
+
     switch (this.direction) {
       case 'right':
         x += offsetWalls;
+        xCollision -= offsetCollision;
         break;
       case 'down':
         y += offsetWalls;
+        yCollision -= offsetCollision;
         break;
       case 'left':
         x -= offsetWalls;
+        xCollision += offsetCollision;
         break;
       case 'up':
         y -= offsetWalls;
+        yCollision += offsetCollision;
+        break;
     }
 
+    
     const objCollision = this.parent.isColliding(x, y);
-
+    
+    if (this.player === '') {
+      const arrDirections = this.parent.checkIsInIntersection(xCollision, yCollision);
+  
+      if (arrDirections.length >= 2) {
+        let ran;
+        
+        do {
+          ran = Math.floor(Math.random() * arrDirections.length);
+        } while (arrDirections[ran] === this.parent.getOppositeDirection(this.direction))
+        
+        this.setNextDirection(arrDirections[ran]);
+      }
+    }
+    
     if (objCollision.char === 'wall' || objCollision.char === '-') {
+
       if (this.direction === 'right') {
         this.setXPacMan(this.getXPacMan() - this.speed);
       } else if (this.direction === 'down') {
@@ -120,9 +125,72 @@ class PacMan extends HTMLElement {
   };
 
   getIdMove() {
+    this.idKeepMove = setInterval(() => {
+      if (this.getXPacMan() === this.lastX && this.getYPacMan() === this.lastY && this.player === '') {
+        const offsetWalls = this.hallWidth / 4;
+        //check this.getXPacMan() and this.getYPacMan()
+        let x = this.getXPacMan() - this.sizeOffset;
+        let y = this.getYPacMan() - this.sizeOffset;
+    
+        const offsetCollision = this.hallWidth / 6;
+        let xCollision = x;
+        let yCollision = y;
+    
+        switch (this.direction) {
+          case 'right':
+            x += offsetWalls;
+            xCollision -= offsetCollision;
+            break;
+          case 'down':
+            y += offsetWalls;
+            yCollision -= offsetCollision;
+            break;
+          case 'left':
+            x -= offsetWalls;
+            xCollision += offsetCollision;
+            break;
+          case 'up':
+            y -= offsetWalls;
+            yCollision += offsetCollision;
+            break;
+        }
+
+        const arrDirections = this.parent.checkIsInIntersection(xCollision, yCollision);
+        const dir = arrDirections[Math.floor(Math.random() * (arrDirections.length))]
+        this.setNextDirection(dir)
+        
+        if (dir === undefined) {
+          console.log('dir', dir, 'pacman')
+        }
+      }
+
+      this.lastX = this.getXPacMan();
+      this.lastY = this.getYPacMan();
+    }, fps * 10);
+    
     return setInterval(() => {
+      
+      const offsetWalls = this.hallWidth / 2;
+      let x = this.getXPacMan() - this.sizeOffset;
+      let y = this.getYPacMan() - this.sizeOffset;
+
+      switch (this.direction) {
+        case 'left':
+          x += offsetWalls;
+          break;
+        case 'up':
+          y += offsetWalls;
+          break;
+        case 'right':
+          x -= offsetWalls;
+          break;
+        case 'down':
+          y -= offsetWalls;
+      }
+
+      // console.log(this.parent.checkIsInIntersection(x, y))
       this.checkMapsCollision();
-      this.checkIsFreeDirection(this.nextDirection) && this.setDirection(this.nextDirection);
+      this.parent.checkIsFreeDirection(this.getXPacMan() - this.sizeOffset, this.getYPacMan() - this.sizeOffset, this.nextDirection) && this.setDirection(this.nextDirection);
 
       if (this.parentNode) {
         switch (this.direction) {
@@ -277,7 +345,6 @@ class PacMan extends HTMLElement {
   
   pacmanMove(e) {
     {
-      
       if (e.key === 'd' || e.key === 'D' || e.key === 'ArrowRight') {
           this.setNextDirection('right');
       } else 
@@ -324,6 +391,33 @@ class PacMan extends HTMLElement {
 
   getLives() {
     return this.lives;
+  }
+
+  setLives(value) {
+    this.lives += value;
+  }
+
+  pause() {
+    clearInterval(this.idMove);
+    clearInterval(this.idKeepMove);
+    clearInterval(this.idAnimationMouth);
+  }
+
+  continue() {
+    this.idMove = this.getIdMove();
+    this.idAnimationMouth = this.getIdAnimationMouth();
+  }
+
+  reset(time) {
+    this.pause();
+
+    setTimeout(() => {
+      this.initialize();
+    }, time);
+  }
+
+  getRadius() {
+    return this.radius;
   }
 }
 
