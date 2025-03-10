@@ -1,13 +1,12 @@
   
-  
- ✔ Detectar colisiones pacman-fantasma
-      . Fantasma muere
-    ✔✔ Pacman muere
-  - Teletransporte borde
-  - Disminuir probMove
   - Arreglar bug pause (intervals)
-  - Reemplazar todos los tiempos del juego con respecto a fps (de modo que si fps es bajo, todo va rápido, no hay pausas)
-
+  - Disminuir probMove
+  - Botón de reintentar cuando se termina el juego
+  - Responsive screen (añadir movimiento con gestos en móvil)
+  
+  ✔ Detectar colisiones pacman-fantasma
+      ✔ Fantasma muere (arreglar animaciones: revisar el flujo del estado del fantasma)
+    ✔✔ Pacman muere
   - Animación cuando pacman muere
   - Hacer pantalla de inicio con configuraciones:
       - Cantidad de vidas (1 - 5)
@@ -18,6 +17,7 @@
   - Hacer la pantalla responsive
   - Agregar sonidos
 
+
   - Hacer los border dobles hacia afuera del punto de referencia
   - Generar el mapa del juego dinámicamente
 
@@ -26,7 +26,7 @@
     ✔✔ Puntuación
     ✔✔ Vidas de pacman
 
-
+✔✔ Teletransporte borde
 ✔✔ Movimiento aleatorio de los fantasmas (pero que cada vez con más probabilidad de atrapar a pacman y que cuando sean vulnerables huyan)
 ✔✔ Arreglar bug movimiento fantasmas (probabilidad 50% de mover de horizontal o vertical, siempre que ambas opciones sean válidas)
 ✔✔ Que el movimiento automático sea aleatorio pero entre intersecciones

@@ -679,6 +679,11 @@ class Ghost extends HTMLElement {
       this.initialize(this.colors.default.body);
     }, time);
   }
+
+  setPosition(x, y) {
+    this.x = x;
+    this.y = y;
+  }
 }
 
 customElements.define("lb-ghost", Ghost);

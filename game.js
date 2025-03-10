@@ -69,7 +69,26 @@ class PacMan_Game extends HTMLElement {
     this.score = 0;
     this.gameState = 'playing';
 
-    this.nonWallChars = [' ', '*', '.', '-'];
+    this.nonWallChars = [' ', '*', '.', '-', 't'];
+    this.tunnels = [
+      [
+        {
+          x: 5,
+          y: 14,
+        },
+        {
+          x: 22,
+          y: 14,
+        }
+      ],
+    ]
+
+    /**
+     * Caption:
+     *  t: tunnel
+     *  .: pellet
+     *  *: super pellet
+     */
     
     this.map = [
       '╔════════════╦╦════════════╗',
@@ -86,7 +105,7 @@ class PacMan_Game extends HTMLElement {
       '     ║.||          ||.║     ',
       '     ║.|| ╔══--══╗ ||.║     ',
       '═════╝.└┘ ║      ║ └┘.╚═════',
-      '      .   ║      ║   .      ',
+      't     .   ║      ║   .    t ',
       '═════╗.┌┐ ║      ║ ┌┐.╔═════',
       '     ║.|| ╚══════╝ ||.║     ',
       '     ║.||          ||.║     ',
@@ -103,7 +122,7 @@ class PacMan_Game extends HTMLElement {
       '║.└────────┘.└┘.└────────┘.║',
       '║..........................║',
       '╚══════════════════════════╝',
-    ]
+    ];
   }
   
   connectedCallback() {
@@ -146,6 +165,7 @@ class PacMan_Game extends HTMLElement {
     this.printPacmanLives(this.pacman.getLives());
 
     this.checkGameState();
+    this.checkIsOnTunnel();
 
     //sleep
     while (performance.now() - this.start < this.fps) { }
@@ -638,18 +658,22 @@ class PacMan_Game extends HTMLElement {
     }
   }
 
-  manualMovement(e) {
-
+  getGameCharacters() {
     let characters = [this.pacman]
 
     for (let g in this.ghosts) {
       characters.push(this['ghost'+g])
     }
 
+    return characters;
+  }
+
+  manualMovement(e) {
+
+    const characters = this.getGameCharacters();
+
     for (let a in characters) {
       const player = characters[a].player;
-
-      // console.log(characters[a])
 
       if (player === 'p1') {
         
@@ -728,6 +752,54 @@ class PacMan_Game extends HTMLElement {
 
   getGameState() {
     return this.gameState;
+  }
+
+  checkIsOnTunnel() {
+    const characters = this.getGameCharacters();
+    let x, y;
+
+    for (let a in characters) {
+      if (characters[a].id === 'pacman') {
+        x = characters[a].getXPacMan();
+        y = characters[a].getYPacMan();
+      } else if (characters[a].id.includes('ghost')) {
+        x = characters[a].x;
+        y = characters[a].y;
+      }
+      x = x - this.sizeOffset;
+      y = y - this.sizeOffset;
+
+      const objCollision = this.isColliding(x, y);
+      const offsetTeleport = 1.5*this.hallWidth;
+
+      if (objCollision.char === 't') {
+        for (let ti in this.tunnels) {
+          for (let tj in this.tunnels[ti]) {
+            // check tunnel direction
+            if (this.tunnels[ti][0].y === this.tunnels[ti][1].y) {
+              //x
+
+              if (objCollision.x < this.tunnels[ti][tj].x) {
+                characters[a].setPosition(this.map[0].length * this.hallWidth - offsetTeleport - this.sizeOffset, this.tunnels[ti][tj].y * this.hallWidth + this.sizeOffset);
+              } else if (objCollision.x > this.tunnels[ti][tj].x) {
+                characters[a].setPosition(offsetTeleport + this.sizeOffset, this.tunnels[ti][tj].y * this.hallWidth + this.sizeOffset);
+              }
+            } else if (this.tunnels[ti][0].x === this.tunnels[ti][1].x) {
+              //y
+
+              if (objCollision.y < this.tunnels[ti][tj].y) {
+                characters[a].setPosition(this.tunnels[ti][tj].x * this.hallWidth + this.sizeOffset, this.map.length * this.hallWidth - offsetTeleport - this.sizeOffset);
+              } else if (objCollision.y > this.tunnels[ti][tj].y) {
+                characters[a].setPosition(this.tunnels[ti][tj].x * this.hallWidth + this.sizeOffset, offsetTeleport + this.sizeOffset);
+              }
+            }
+
+            
+              
+          }
+        }
+      }
+    }
   }
 
   checkGameState() {

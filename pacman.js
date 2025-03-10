@@ -419,6 +419,11 @@ class PacMan extends HTMLElement {
   getRadius() {
     return this.radius;
   }
+
+  setPosition(x, y) {
+    this.setXPacMan(x);
+    this.setYPacMan(y);
+  }
 }
 
 customElements.define("lb-pacman", PacMan);
