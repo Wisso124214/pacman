@@ -1,14 +1,18 @@
   
-  - Arreglar bug pause (intervals)
-  - Disminuir probMove
-  - Botón de reintentar cuando se termina el juego
+  - Puntos fantasmas (combo)
+  - Cambiar el texto de game over, por pacman wins, ghosts win
+  - Disminuir probMove (dejar el movimiento fijo persiguiendo 
+      a pacman con las prioridades de movimiento, comprueba vertical 
+      y luego horizontal. Que probMove no sea mayor a 0.8 o 0.7 (probar) 
+      para que se mueva un poco más fluido)
+  - Press r to retry
   - Responsive screen (añadir movimiento con gestos en móvil)
   
   ✔ Detectar colisiones pacman-fantasma
       ✔ Fantasma muere (arreglar animaciones: revisar el flujo del estado del fantasma)
     ✔✔ Pacman muere
   - Animación cuando pacman muere
-  - Hacer pantalla de inicio con configuraciones:
+  - Hacer pantalla de inicio (o archivo) con configuraciones:
       - Cantidad de vidas (1 - 5)
       - Speed pellets
       - Pacman or ghost? (pick isMissPacman or colorGhost)
@@ -17,7 +21,7 @@
   - Hacer la pantalla responsive
   - Agregar sonidos
 
-
+  - Agregar fruta
   - Hacer los border dobles hacia afuera del punto de referencia
   - Generar el mapa del juego dinámicamente
 
@@ -26,6 +30,7 @@
     ✔✔ Puntuación
     ✔✔ Vidas de pacman
 
+✔✔ Arreglar bug pause (intervals)
 ✔✔ Teletransporte borde
 ✔✔ Movimiento aleatorio de los fantasmas (pero que cada vez con más probabilidad de atrapar a pacman y que cuando sean vulnerables huyan)
 ✔✔ Arreglar bug movimiento fantasmas (probabilidad 50% de mover de horizontal o vertical, siempre que ambas opciones sean válidas)

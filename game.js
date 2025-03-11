@@ -87,7 +87,7 @@ class PacMan_Game extends HTMLElement {
      * Caption:
      *  t: tunnel
      *  .: pellet
-     *  *: super pellet
+     *  *: power pellet
      */
     
     this.map = [
@@ -105,7 +105,7 @@ class PacMan_Game extends HTMLElement {
       '     ║.||          ||.║     ',
       '     ║.|| ╔══--══╗ ||.║     ',
       '═════╝.└┘ ║      ║ └┘.╚═════',
-      't     .   ║      ║   .    t ',
+      't     .   ║      ║   .     t ',
       '═════╗.┌┐ ║      ║ ┌┐.╔═════',
       '     ║.|| ╚══════╝ ||.║     ',
       '     ║.||          ||.║     ',
@@ -704,15 +704,21 @@ class PacMan_Game extends HTMLElement {
             this[characters[a].id].setNextDirection('up');
         }
       }
+    }
 
-      if (e.key === 'p' || e.key === 'P') {
-        if (this.gameState === 'playing') {
+    if (e.key === 'p' || e.key === 'P') {
+      if (this.gameState === 'playing') {
+        
+        for (let a in characters) {
           this[characters[a].id].pause();
-          this.gameState = 'paused';
-        } else if (this.gameState !== 'game-over') {
-          this[characters[a].id].continue();
-          this.gameState = 'playing';
         }
+        this.gameState = 'paused';
+      } else if (this.gameState !== 'game-over') {
+
+        for (let a in characters) {
+          this[characters[a].id].continue();
+        }
+        this.gameState = 'playing';
       }
     }
   }
@@ -770,7 +776,7 @@ class PacMan_Game extends HTMLElement {
       y = y - this.sizeOffset;
 
       const objCollision = this.isColliding(x, y);
-      const offsetTeleport = 1.5*this.hallWidth;
+      const offsetTeleport = 1.2*this.hallWidth;
 
       if (objCollision.char === 't') {
         for (let ti in this.tunnels) {
@@ -793,9 +799,6 @@ class PacMan_Game extends HTMLElement {
                 characters[a].setPosition(this.tunnels[ti][tj].x * this.hallWidth + this.sizeOffset, offsetTeleport + this.sizeOffset);
               }
             }
-
-            
-              
           }
         }
       }

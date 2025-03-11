@@ -79,13 +79,12 @@ class Ghost extends HTMLElement {
     this.speed = 40 / 10;
     this.idDirection = 0;
     this.state = 'default';    //default, vulnerable, blinking
-    console.log(this.state, color)
 
     this.isAnimationMoving = false;
     this.startAnimationMoving = performance.now();
     this.timeAnimationBlinking = this.blinkingTime / 6;
 
-    this.idMove = this.getIdMove();
+    this.getIdMove();
 
     if (this.isConnected) {
       this.autoMove();
@@ -112,52 +111,57 @@ class Ghost extends HTMLElement {
       delay = Math.floor(Math.random() * 8000 + 2000);
     }
 
-    this.idUpDown = setInterval(() => {
-      const offsetWalls = this.hallWidth / 2;
-      let x = this.x - this.sizeOffset;
-      let y = this.y - this.sizeOffset;
-
-      switch (this.direction) {
-        case 'down':
-          y += offsetWalls;
-          break;
-        case 'up':
-          y -= offsetWalls;
-      }
-      const objCollision = this.parent.isColliding(x, y);
-
-      if (objCollision.char === 'wall' || objCollision.char === '-') {
-        this.setNextDirection(this.direction === 'up' ? 'down' : 'up')
-      }
-    }, fps)
+    if (this.idUpDown === undefined) {
+      this.idUpDown = setInterval(() => {
+        const offsetWalls = this.hallWidth / 2;
+        let x = this.x - this.sizeOffset;
+        let y = this.y - this.sizeOffset;
+  
+        switch (this.direction) {
+          case 'down':
+            y += offsetWalls;
+            break;
+          case 'up':
+            y -= offsetWalls;
+        }
+        const objCollision = this.parent.isColliding(x, y);
+  
+        if (objCollision.char === 'wall' || objCollision.char === '-') {
+          this.setNextDirection(this.direction === 'up' ? 'down' : 'up')
+        }
+      }, fps)
+    }
 
     setTimeout(() => {
       this.isOpenDoorBox = true;
       clearInterval(this.idUpDown);
 
-      this.idSide = setInterval(() => {
-        const x = (this.x - this.sizeOffset)/this.hallWidth;
-        const y = (this.y - this.sizeOffset)/this.hallWidth;
 
-        if (x > 15) {
-          this.setNextDirection('left');
-        } else if (x < 14) {
-          this.setNextDirection('right');
-        } else {
-          this.setNextDirection('up');
-        }
-
-        if (Math.floor(y) === 11) {
-          
-          clearInterval(this.idSide);
-          this.setNextDirection(['right', 'left'][Math.round(Math.random()*1)])
-          
-          setTimeout(() => {
-            this.isOnBox = false;
-            this.isOpenDoorBox = false;
-          }, 500);
-        }
-      }, fps)
+      if (this.idSide === undefined) {
+        this.idSide = setInterval(() => {
+          const x = (this.x - this.sizeOffset)/this.hallWidth;
+          const y = (this.y - this.sizeOffset)/this.hallWidth;
+  
+          if (x > 15) {
+            this.setNextDirection('left');
+          } else if (x < 14) {
+            this.setNextDirection('right');
+          } else {
+            this.setNextDirection('up');
+          }
+  
+          if (Math.floor(y) === 11) {
+            
+            clearInterval(this.idSide);
+            this.setNextDirection(['right', 'left'][Math.round(Math.random()*1)])
+            
+            setTimeout(() => {
+              this.isOnBox = false;
+              this.isOpenDoorBox = false;
+            }, 500);
+          }
+        }, fps)
+      }
     }, delay);
   }
 
@@ -179,7 +183,6 @@ class Ghost extends HTMLElement {
     if (x1 < x && x < x2 && y1 < y && y < y2) {
       if (this.state !== 'default') {
         this.state = 'dead';
-        console.log(this.state, this.colors.default.body)
         this.reset(Math.random() * 5000 + 2000);
 
       } else if (this.state === 'default') {
@@ -357,84 +360,87 @@ class Ghost extends HTMLElement {
   }
 
   getIdMove() {
-    this.idKeepMove = setInterval(() => {
-      if (!this.isOnBox) {
-        if (this.x === this.lastX && this.y === this.lastY && this.player === '') {
-          const offsetWalls = this.hallWidth / 4;
-          
-          let x = this.x - this.sizeOffset;
-          let y = this.y - this.sizeOffset;
-      
-          const offsetCollision = this.hallWidth / 6;
-          let xCollision = x;
-          let yCollision = y;
-      
-          switch (this.direction) {
-            case 'right':
-              x += offsetWalls;
-              xCollision -= offsetCollision;
-              break;
-            case 'down':
-              y += offsetWalls;
-              yCollision -= offsetCollision;
-              break;
-            case 'left':
-              x -= offsetWalls;
-              xCollision += offsetCollision;
-              break;
-            case 'up':
-              y -= offsetWalls;
-              yCollision += offsetCollision;
-              break;
-          }
-
-          const arrDirections = this.parent.checkIsInIntersection(xCollision, yCollision);
-          const dir = arrDirections[Math.floor(Math.random() * (arrDirections.length))]
-          this.setNextDirection(dir)
-          
-          if (dir === undefined) {
-            console.log(dir, this.colors.default.body)
-          }
-        }
-
-        this.lastX = this.x;
-        this.lastY = this.y;
-      }
-    }, fps * 10);
-
-    return setInterval(() => {
-      this.checkMapsCollision();
-      this.checkPacmanCollision();
-
-      if (this.isOpenDoorBox) {
-        const y = (this.y - this.sizeOffset) / this.hallWidth;
-
-        if (y <= 12 && this.player !== '') {
-          this.isOpenDoorBox = false;
-          this.isOnBox = false;
-          console.log('door closed')
-        }
-      }
-
-      if (this.parentNode) {
-        switch (this.direction) {
-          case 'right': 
-            this.x = (this.x + this.speed);
-            break;
-          case 'down': 
-            this.y = (this.y + this.speed);
-            break;
-          case 'left': 
-            this.x = (this.x - this.speed);
-            break;
-          case 'up': 
-            this.y = (this.y - this.speed);
-            break;
-        }
+    if (this.idKeepMove === undefined) {
+      this.idKeepMove = setInterval(() => {
+        if (!this.isOnBox) {
+          if (this.x === this.lastX && this.y === this.lastY && this.player === '') {
+            const offsetWalls = this.hallWidth / 4;
+            
+            let x = this.x - this.sizeOffset;
+            let y = this.y - this.sizeOffset;
         
-        this.parent.checkIsFreeDirection(this.x - this.sizeOffset, this.y - this.sizeOffset, this.nextDirection) && this.setDirection(this.nextDirection);
-      }
-    }, fps);
+            const offsetCollision = this.hallWidth / 6;
+            let xCollision = x;
+            let yCollision = y;
+        
+            switch (this.direction) {
+              case 'right':
+                x += offsetWalls;
+                xCollision -= offsetCollision;
+                break;
+              case 'down':
+                y += offsetWalls;
+                yCollision -= offsetCollision;
+                break;
+              case 'left':
+                x -= offsetWalls;
+                xCollision += offsetCollision;
+                break;
+              case 'up':
+                y -= offsetWalls;
+                yCollision += offsetCollision;
+                break;
+            }
+  
+            const arrDirections = this.parent.checkIsInIntersection(xCollision, yCollision);
+            const dir = arrDirections[Math.floor(Math.random() * (arrDirections.length))]
+            this.setNextDirection(dir)
+            
+            if (dir === undefined) {
+              console.log(dir, this.colors.default.body)
+            }
+          }
+  
+          this.lastX = this.x;
+          this.lastY = this.y;
+        }
+      }, fps * 10);
+    }
+
+    if (this.idMove === undefined) {
+      this.idMove = setInterval(() => {
+        this.checkMapsCollision();
+        this.checkPacmanCollision();
+  
+        if (this.isOpenDoorBox) {
+          const y = (this.y - this.sizeOffset) / this.hallWidth;
+  
+          if (y <= 12 && this.player !== '') {
+            this.isOpenDoorBox = false;
+            this.isOnBox = false;
+          }
+        }
+  
+        if (this.parentNode) {
+          switch (this.direction) {
+            case 'right': 
+              this.x = (this.x + this.speed);
+              break;
+            case 'down': 
+              this.y = (this.y + this.speed);
+              break;
+            case 'left': 
+              this.x = (this.x - this.speed);
+              break;
+            case 'up': 
+              this.y = (this.y - this.speed);
+              break;
+          }
+          
+          this.parent.checkIsFreeDirection(this.x - this.sizeOffset, this.y - this.sizeOffset, this.nextDirection) && this.setDirection(this.nextDirection);
+        }
+      }, fps);
+    }
   }
 
   setDirection(direction) {
@@ -646,16 +652,14 @@ class Ghost extends HTMLElement {
 
   setVulnerable() {
     this.state = 'vulnerable';
-    console.log(this.state, this.colors.default.body)
 
     setTimeout(() => {
       if (this.state !== 'default') {
         this.state = 'blinking';
-        console.log(this.state, this.colors.default.body)
 
         setTimeout(() => {
           this.state = 'default';
-          console.log(this.state, this.colors.default.body)
+
         }, this.blinkingTime);
       }
     }, this.vulnerableTime - this.blinkingTime);
@@ -666,10 +670,15 @@ class Ghost extends HTMLElement {
     clearInterval(this.idKeepMove);
     clearInterval(this.idUpDown);
     clearInterval(this.idSide);
+
+    this.idMove = undefined;
+    this.idKeepMove = undefined;
+    this.idUpDown = undefined;
+    this.idSide = undefined;
   }
 
   continue() {
-    this.idMove = this.getIdMove();
+    this.getIdMove();
   }
 
   reset(time) {
